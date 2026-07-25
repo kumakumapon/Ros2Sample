@@ -26,7 +26,7 @@ SRC_DIR = REPO_ROOT / 'src'
 
 # チュートリアル用パッケージなど、シミュレーション仕様書
 # (docs/simulation_spec.md) への記載を必須としないパッケージ。
-SPEC_EXEMPT_PACKAGES = {'ros2_learning'}
+SPEC_EXEMPT_PACKAGES = {'ros2_learning', 'ros2_learning_cpp'}
 
 ENTRY_POINT_RE = re.compile(r"'(?P<name>[\w-]+)\s*=\s*[\w.]+:[\w.]+'")
 
