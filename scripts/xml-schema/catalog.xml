@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!--
+  XML カタログ: package.xml が参照する ROS のスキーマ URL を、
+  リポジトリに同梱したローカルの .xsd に解決させる。
+
+  ament_xmllint は package.xml の <?xml-model?> に書かれた href を
+  そのまま xmllint のスキーマ指定オプションに渡すため、既定では
+  テストのたびに http://download.ros.org へ HTTP アクセスが発生する。libxml2 の
+  HTTP クライアントにはタイムアウトが無く、接続が止まるとテストが
+  ハングして CTest の 60 秒タイムアウトで CI が落ちる。
+  このカタログを XML_CATALOG_FILES に指定するとネットワークアクセスが
+  無くなり、スキーマ検証はそのまま維持される。
+-->
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+  <rewriteURI uriStartString="http://download.ros.org/schema/" rewritePrefix="./"/>
+  <rewriteURI uriStartString="https://download.ros.org/schema/" rewritePrefix="./"/>
+  <rewriteSystem systemIdStartString="http://download.ros.org/schema/" rewritePrefix="./"/>
+  <rewriteSystem systemIdStartString="https://download.ros.org/schema/" rewritePrefix="./"/>
+</catalog>

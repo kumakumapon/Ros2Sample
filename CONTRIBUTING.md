@@ -54,6 +54,17 @@ cd src/ground_robot_sim
 python3 -m pytest test/ -q
 ```
 
+`colcon test` を直接実行する場合は、先に `source scripts/xml-catalog.sh` を実行してください（`./scripts/lint.sh` は内部で読み込み済みです）。詳細は次節を参照してください。
+
+### package.xml のスキーマ検証をオフラインで行う
+
+`ament_xmllint` は `package.xml` の `<?xml-model?>` に書かれた URL をそのまま `xmllint` に渡すため、既定ではテストのたびに `http://download.ros.org` へ HTTP アクセスが発生します。libxml2 の HTTP 取得にはタイムアウトが無く、ダウンロードが停止すると `xmllint` がハングして CTest の 60 秒タイムアウトでテストが失敗します。
+
+これを避けるため、スキーマ（`scripts/xml-schema/*.xsd`）をリポジトリに同梱し、XML カタログ（`scripts/xml-schema/catalog.xml`）で URL をローカルファイルに解決しています。`source scripts/xml-catalog.sh` を実行すると `XML_CATALOG_FILES` が設定され、スキーマ検証を維持したままネットワークアクセスが無くなります。
+
+- `package.xml` の `<?xml-model?>` 行は削除しないでください（削除するとスキーマ検証が行われなくなります）。
+- 同梱スキーマの取得元は [ros-infrastructure/rep](https://github.com/ros-infrastructure/rep) の `xsd/` ディレクトリです。パッケージフォーマットの仕様が更新された場合のみ、同じ場所から取得し直してください。
+
 ## 変更内容に応じた更新箇所
 
 - `src/` にパッケージを追加・改名した場合は、README のパッケージ一覧・実行例と `docs/development.md` の一覧を更新してください。

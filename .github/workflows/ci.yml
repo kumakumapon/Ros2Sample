@@ -91,6 +91,7 @@ jobs:
           set -o pipefail
           export AMENT_TRACE_SETUP_FILES="${AMENT_TRACE_SETUP_FILES:-}"
           source /opt/ros/${{ matrix.ros_distro }}/setup.bash
+          source ./scripts/xml-catalog.sh
           colcon test --event-handlers console_direct+
           echo '```' >> "$GITHUB_STEP_SUMMARY"
           colcon test-result --verbose 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
