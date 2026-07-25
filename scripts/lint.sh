@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# xmllint がスキーマをネットワーク取得しないようカタログを設定する。
+# shellcheck source=scripts/xml-catalog.sh
+source "$(dirname "${BASH_SOURCE[0]}")/xml-catalog.sh"
+
 if ! command -v colcon >/dev/null 2>&1; then
   echo "error: colcon is not installed. Install python3-colcon-common-extensions." >&2
   exit 127
