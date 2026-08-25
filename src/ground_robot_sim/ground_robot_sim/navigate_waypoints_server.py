@@ -99,82 +99,85 @@ class NavigateWaypointsServer(Node):
         )
 
         rate = self.create_rate(control_rate_hz)
-        current_index = 0
-        waypoints_completed = 0
-        feedback = NavigateWaypoints.Feedback()
+        try:
+            current_index = 0
+            waypoints_completed = 0
+            feedback = NavigateWaypoints.Feedback()
 
-        self.get_logger().info(
-            f'Executing NavigateWaypoints: {len(waypoints)} waypoints, loop={loop}'
-        )
+            self.get_logger().info(
+                f'Executing NavigateWaypoints: {len(waypoints)} waypoints, loop={loop}'
+            )
 
-        while rclpy.ok():
-            if goal_handle.is_cancel_requested:
-                self._stop_robot()
-                goal_handle.canceled()
-                result = NavigateWaypoints.Result()
-                result.success = False
-                result.waypoints_completed = waypoints_completed
-                result.message = 'Goal cancelled'
-                self.get_logger().info(
-                    f'NavigateWaypoints cancelled after {waypoints_completed} waypoints'
-                )
-                return result
+            while rclpy.ok():
+                if goal_handle.is_cancel_requested:
+                    self._stop_robot()
+                    goal_handle.canceled()
+                    result = NavigateWaypoints.Result()
+                    result.success = False
+                    result.waypoints_completed = waypoints_completed
+                    result.message = 'Goal cancelled'
+                    self.get_logger().info(
+                        f'NavigateWaypoints cancelled after {waypoints_completed} waypoints'
+                    )
+                    return result
 
-            if current_index >= len(waypoints):
-                break
+                if current_index >= len(waypoints):
+                    break
 
-            target_x, target_y = waypoints[current_index]
-            dx = target_x - self._x
-            dy = target_y - self._y
-            distance = math.sqrt(dx * dx + dy * dy)
+                target_x, target_y = waypoints[current_index]
+                dx = target_x - self._x
+                dy = target_y - self._y
+                distance = math.sqrt(dx * dx + dy * dy)
 
-            feedback.current_index = current_index
-            feedback.total_waypoints = len(waypoints)
-            feedback.distance_to_current = distance
-            feedback.current_position.x = self._x
-            feedback.current_position.y = self._y
-            feedback.current_position.z = 0.0
-            goal_handle.publish_feedback(feedback)
+                feedback.current_index = current_index
+                feedback.total_waypoints = len(waypoints)
+                feedback.distance_to_current = distance
+                feedback.current_position.x = self._x
+                feedback.current_position.y = self._y
+                feedback.current_position.z = 0.0
+                goal_handle.publish_feedback(feedback)
 
-            if distance <= tolerance_m:
-                waypoints_completed += 1
-                self.get_logger().info(
-                    f'Reached waypoint {current_index}: ({target_x:.3f}, {target_y:.3f})'
-                )
-                next_index = current_index + 1
-                if next_index < len(waypoints):
-                    current_index = next_index
-                elif loop:
-                    current_index = 0
-                else:
-                    current_index = len(waypoints)
-                linear_pid.reset()
-                angular_pid.reset()
-                self._stop_robot()
-            else:
-                bearing = atan2(dy, dx)
-                heading_error = normalize_angle(bearing - self._yaw)
-                angular = angular_pid.compute(heading_error, dt)
-                if abs(heading_error) <= heading_gate:
-                    linear = linear_pid.compute(distance, dt)
-                else:
-                    linear = 0.0
+                if distance <= tolerance_m:
+                    waypoints_completed += 1
+                    self.get_logger().info(
+                        f'Reached waypoint {current_index}: ({target_x:.3f}, {target_y:.3f})'
+                    )
+                    next_index = current_index + 1
+                    if next_index < len(waypoints):
+                        current_index = next_index
+                    elif loop:
+                        current_index = 0
+                    else:
+                        current_index = len(waypoints)
                     linear_pid.reset()
-                cmd = Twist()
-                cmd.linear.x = linear
-                cmd.angular.z = angular
-                self._cmd_pub.publish(cmd)
+                    angular_pid.reset()
+                    self._stop_robot()
+                else:
+                    bearing = atan2(dy, dx)
+                    heading_error = normalize_angle(bearing - self._yaw)
+                    angular = angular_pid.compute(heading_error, dt)
+                    if abs(heading_error) <= heading_gate:
+                        linear = linear_pid.compute(distance, dt)
+                    else:
+                        linear = 0.0
+                        linear_pid.reset()
+                    cmd = Twist()
+                    cmd.linear.x = linear
+                    cmd.angular.z = angular
+                    self._cmd_pub.publish(cmd)
 
-            rate.sleep()
+                rate.sleep()
 
-        self._stop_robot()
-        goal_handle.succeed()
-        result = NavigateWaypoints.Result()
-        result.success = True
-        result.waypoints_completed = waypoints_completed
-        result.message = f'Completed {waypoints_completed} waypoint(s)'
-        self.get_logger().info(result.message)
-        return result
+            self._stop_robot()
+            goal_handle.succeed()
+            result = NavigateWaypoints.Result()
+            result.success = True
+            result.waypoints_completed = waypoints_completed
+            result.message = f'Completed {waypoints_completed} waypoint(s)'
+            self.get_logger().info(result.message)
+            return result
+        finally:
+            self.destroy_rate(rate)
 
     def _stop_robot(self) -> None:
         self._cmd_pub.publish(Twist())

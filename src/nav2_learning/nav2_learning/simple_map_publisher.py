@@ -86,8 +86,11 @@ class SimpleMapPublisher(Node):
             reliability=QoSReliabilityPolicy.RELIABLE,
             durability=QoSDurabilityPolicy.TRANSIENT_LOCAL,
         )
+        # The map is intentionally global: multiple namespaced robots share
+        # one world map rather than receiving independent map instances.
         self._map_pub = self.create_publisher(OccupancyGrid, '/map', latched_qos)
         self.create_subscription(
+            # RViz's clicked-point tool is also global for this shared map.
             PointStamped, '/clicked_point', self._clicked_point_callback, 10
         )
 

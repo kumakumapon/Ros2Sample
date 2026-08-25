@@ -259,8 +259,12 @@
 
 ### 7.2 `complementary_filter`
 
+実行ファイル名は `complementary_filter_node`、起動後の ROS ノード名は
+`complementary_filter` です。
+
 | 項目 | 仕様 |
 | --- | --- |
+| 実行ファイル名 | `complementary_filter_node` |
 | ノード名 | `complementary_filter` |
 | 入力 topic | `gps` (RELIABLE)、`imu` (BEST_EFFORT)、`wheel_odom` (RELIABLE) |
 | 出力 topic | `fused_odom` (`Odometry`, RELIABLE)、`filter_diagnostics` (`String`) |
@@ -327,7 +331,7 @@
 
 | launch | 主な起動ノード | シナリオ |
 | --- | --- | --- |
-| `sensor_fusion_demo.launch.py` | `noisy_sensor_node`、`complementary_filter`、`ekf_node`、`lifecycle_data_recorder` | ノイズ付きセンサーから相補フィルタと EKF の双方でフュージョンし、ライフサイクルレコーダーで記録。レコーダーは自動 configure → activate される |
+| `sensor_fusion_demo.launch.py` | `noisy_sensor_node`、`complementary_filter`（実行ファイル: `complementary_filter_node`）、`ekf_node`、`lifecycle_data_recorder` | ノイズ付きセンサーから相補フィルタと EKF の双方でフュージョンし、ライフサイクルレコーダーで記録。レコーダーは自動 configure → activate される |
 
 ## 8. nav2_learning 仕様
 

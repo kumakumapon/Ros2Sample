@@ -33,6 +33,27 @@ def test_world_to_grid():
     assert gy == 4
 
 
+def test_world_to_grid_floors_coordinates_below_origin():
+    """Coordinates just outside the lower map boundary map to negative cells."""
+    gx, gy = world_to_grid(-2.52, -2.51, -2.5, -2.5, 0.05)
+    assert (gx, gy) == (-1, -1)
+
+
+@pytest.mark.parametrize('resolution', [0.0, -0.05])
+def test_world_to_grid_rejects_nonpositive_resolution(resolution):
+    """A grid resolution must be positive before coordinates are converted."""
+    with pytest.raises(ValueError, match='resolution must be positive'):
+        world_to_grid(0.0, 0.0, 0.0, 0.0, resolution)
+
+
+@pytest.mark.parametrize('grid_cell', [(-3, -2), (0, 0), (5, 7)])
+def test_grid_to_world_roundtrip_returns_original_cell(grid_cell):
+    """Cell centers always convert back to their source grid cell."""
+    gx, gy = grid_cell
+    wx, wy = grid_to_world(gx, gy, -2.5, -2.5, 0.05)
+    assert world_to_grid(wx, wy, -2.5, -2.5, 0.05) == grid_cell
+
+
 def test_grid_to_world():
     """grid_to_world がセル中心のワールド座標を返すことを確認."""
     wx, wy = grid_to_world(3, 5, 0.0, 0.0, 0.05)

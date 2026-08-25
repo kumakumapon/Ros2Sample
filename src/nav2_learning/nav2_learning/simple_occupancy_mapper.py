@@ -68,6 +68,7 @@ class SimpleOccupancyMapper(Node):
             reliability=QoSReliabilityPolicy.RELIABLE,
             durability=QoSDurabilityPolicy.TRANSIENT_LOCAL,
         )
+        # Publish one shared world map while scan and odom remain namespaced.
         self._map_pub = self.create_publisher(OccupancyGrid, '/map', latched_qos)
 
         self._tf_broadcaster = StaticTransformBroadcaster(self)

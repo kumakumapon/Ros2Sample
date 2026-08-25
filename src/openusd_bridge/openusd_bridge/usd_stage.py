@@ -2,11 +2,42 @@
 
 import math
 from pathlib import Path
+import stat
 from typing import Tuple
 
 
 class OpenUsdUnavailableError(RuntimeError):
     """Raised when the optional OpenUSD Python bindings are unavailable."""
+
+
+def prepare_output_path(output_path: str, overwrite: bool) -> Path:
+    """Validate and prepare a stage output path without following file links."""
+    path = Path(output_path).expanduser()
+    if not path.is_absolute():
+        path = Path.cwd() / path
+    if path.suffix.lower() not in {'.usd', '.usda', '.usdc'}:
+        raise ValueError('output_path must end in .usd, .usda, or .usdc')
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if not path.exists() and not path.is_symlink():
+        return path
+    if path.is_symlink():
+        raise ValueError(
+            'output_path must not be a symbolic link: '
+            f'{path}',
+        )
+    if not stat.S_ISREG(path.stat().st_mode):
+        raise ValueError(
+            'output_path exists but is not a regular file: '
+            f'{path}',
+        )
+    if not overwrite:
+        raise FileExistsError(
+            'output_path already exists. Choose another output_path or set '
+            f'overwrite to true: {path}',
+        )
+    path.unlink()
+    return path
 
 
 class RobotPoseStage:
@@ -17,6 +48,7 @@ class RobotPoseStage:
         output_path: str,
         robot_prim_path: str,
         time_codes_per_second: float,
+        overwrite: bool = True,
     ) -> None:
         """Create a new stage with simple ground and robot geometry."""
         try:
@@ -31,9 +63,6 @@ class RobotPoseStage:
         self._usd = Usd
         self._usd_geom = UsdGeom
 
-        path = Path(output_path).expanduser().resolve()
-        if path.suffix.lower() not in {'.usd', '.usda', '.usdc'}:
-            raise ValueError('output_path must end in .usd, .usda, or .usdc')
         if not robot_prim_path.startswith('/'):
             raise ValueError(
                 'robot_prim_path must be an absolute USD prim path',
@@ -45,7 +74,7 @@ class RobotPoseStage:
             raise ValueError(
                 'time_codes_per_second must be finite and positive',
             )
-        path.parent.mkdir(parents=True, exist_ok=True)
+        path = prepare_output_path(output_path, overwrite)
 
         self.output_path = str(path)
         self.stage = Usd.Stage.CreateNew(self.output_path)

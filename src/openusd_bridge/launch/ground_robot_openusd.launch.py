@@ -14,11 +14,16 @@ def generate_launch_description():
     share_dir = get_package_share_directory('openusd_bridge')
     config_file = join(share_dir, 'config', 'openusd_recording.yaml')
     output_path = LaunchConfiguration('output_path')
+    overwrite = LaunchConfiguration('overwrite')
 
     return LaunchDescription([
         DeclareLaunchArgument(
             'output_path',
             default_value='/tmp/ros2_openusd/robot_motion.usda',
+        ),
+        DeclareLaunchArgument(
+            'overwrite',
+            default_value='true',
         ),
         Node(
             package='ground_robot_sim',
@@ -37,6 +42,9 @@ def generate_launch_description():
             executable='odom_to_usd',
             name='odom_to_usd',
             output='screen',
-            parameters=[config_file, {'output_path': output_path}],
+            parameters=[config_file, {
+                'output_path': output_path,
+                'overwrite': overwrite,
+            }],
         ),
     ])

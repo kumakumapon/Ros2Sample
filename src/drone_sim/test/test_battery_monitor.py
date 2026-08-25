@@ -8,6 +8,11 @@ def compute_throttle(vx: float, vy: float, vz: float, wz: float) -> float:
     return min(1.0, (abs(vx) + abs(vy) + abs(vz) + abs(wz)) / 4.0)
 
 
+def active_throttle(throttle: float, cmd_age_sec: float, cmd_timeout_sec: float) -> float:
+    """Apply BatteryMonitor's cmd_vel freshness rule to a cached throttle."""
+    return throttle if cmd_age_sec <= cmd_timeout_sec else 0.0
+
+
 def compute_drain(
     remaining_wh: float,
     capacity_wh: float,
@@ -49,6 +54,12 @@ class TestThrottle:
     def test_negative_velocity_uses_abs(self):
         result = compute_throttle(-2.0, 0.0, 0.0, 0.0)
         assert result == pytest.approx(0.5)
+
+    def test_stale_command_resets_throttle(self):
+        assert active_throttle(0.75, cmd_age_sec=0.61, cmd_timeout_sec=0.6) == 0.0
+
+    def test_fresh_command_keeps_throttle(self):
+        assert active_throttle(0.75, cmd_age_sec=0.6, cmd_timeout_sec=0.6) == 0.75
 
 
 class TestDrain:

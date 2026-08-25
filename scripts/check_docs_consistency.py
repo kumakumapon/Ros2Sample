@@ -17,7 +17,7 @@ Checks:
    mentioned in the package README.
 """
 
-import re
+import ast
 import sys
 from pathlib import Path
 
@@ -28,7 +28,11 @@ SRC_DIR = REPO_ROOT / 'src'
 # (docs/simulation_spec.md) への記載を必須としないパッケージ。
 SPEC_EXEMPT_PACKAGES = {'ros2_learning', 'ros2_learning_cpp'}
 
-ENTRY_POINT_RE = re.compile(r"'(?P<name>[\w-]+)\s*=\s*[\w.]+:[\w.]+'")
+# README を持たないことを許容するのは、ROS 2 のインターフェース定義だけを
+# 提供するパッケージに限る。名前をこのリストに追加するだけでは除外されず、
+# package.xml の rosidl_interface_packages 宣言も必要とする。
+INTERFACE_ONLY_PACKAGES = {'sample_interfaces'}
+INTERFACE_PACKAGE_MARKER = '<member_of_group>rosidl_interface_packages</member_of_group>'
 
 
 def find_packages():
@@ -75,17 +79,56 @@ def check_config_referenced(pkg_dirs, errors):
                     'ファイルからもパッケージ README からも参照されていません')
 
 
+def console_script_names(setup_py):
+    """Return console_scripts names declared by a literal setup() call.
+
+    Parsing Python instead of scanning text also handles adjacent string
+    literals, which are commonly used to wrap long entry-point declarations.
+    """
+    tree = ast.parse(
+        setup_py.read_text(encoding='utf-8'), filename=str(setup_py))
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        function_name = (
+            node.func.id if isinstance(node.func, ast.Name)
+            else node.func.attr if isinstance(node.func, ast.Attribute)
+            else None
+        )
+        if function_name != 'setup':
+            continue
+        for keyword in node.keywords:
+            if keyword.arg != 'entry_points':
+                continue
+            entry_points = ast.literal_eval(keyword.value)
+            console_scripts = entry_points.get('console_scripts', [])
+            return [entry_point.partition('=')[0].strip()
+                    for entry_point in console_scripts]
+    return []
+
+
+def is_interface_only_package(pkg_dir):
+    """Return whether a documented README exclusion is valid for a package."""
+    if pkg_dir.name not in INTERFACE_ONLY_PACKAGES:
+        return False
+    package_xml = pkg_dir / 'package.xml'
+    return (package_xml.is_file() and INTERFACE_PACKAGE_MARKER in
+            package_xml.read_text(encoding='utf-8'))
+
+
 def check_executables_documented(pkg_dirs, errors):
     """Check that every console_scripts executable is documented."""
     for pkg_dir in pkg_dirs:
         setup_py = pkg_dir / 'setup.py'
         pkg_readme = pkg_dir / 'README.md'
-        if not setup_py.is_file() or not pkg_readme.is_file():
+        if not pkg_readme.is_file():
+            if not is_interface_only_package(pkg_dir):
+                errors.append(f'{pkg_dir.name}: パッケージ README.md がありません')
+            continue
+        if not setup_py.is_file():
             continue
         readme_text = pkg_readme.read_text(encoding='utf-8')
-        for match in ENTRY_POINT_RE.finditer(
-                setup_py.read_text(encoding='utf-8')):
-            executable = match.group('name')
+        for executable in console_script_names(setup_py):
             if executable not in readme_text:
                 errors.append(
                     f'{pkg_dir.name}: 実行ファイル `{executable}` が'

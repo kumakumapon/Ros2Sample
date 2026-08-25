@@ -118,6 +118,15 @@ ros2 run ground_robot_sim teleop_keyboard
 より詳しい解説は [チュートリアル 08: マップとコストマップ](../../docs/tutorials/08_costmap_and_map.md)
 の「発展」セクションを参照してください。
 
+## トピックと名前空間
+
+ロボットごとに分離すべき `simple_path_planner` / `simple_path_follower` の `plan`、`plan_raw`、
+`odom`、`cmd_vel` は相対 topic 名です。
+したがってノードを `/robot1` 名前空間で起動すると、それぞれ `/robot1/plan`、`/robot1/odom`、
+`/robot1/cmd_vel` になります。`/map` は複数ロボットが同じワールド地図を共有するため、意図的に
+グローバル topic としています。`simple_map_publisher` の `/clicked_point` も同じ共有マップ用の
+RViz 操作としてグローバルです。
+
 ## 経路平滑化と動的リプラン
 
 ### 概要

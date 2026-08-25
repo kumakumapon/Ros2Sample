@@ -18,9 +18,11 @@ def world_to_grid(
     origin_y: float,
     resolution: float,
 ) -> Tuple[int, int]:
-    """Convert world coordinates to grid cell indices."""
-    gx = int((wx - origin_x) / resolution)
-    gy = int((wy - origin_y) / resolution)
+    """Convert world coordinates to grid cell indices using floor rounding."""
+    if resolution <= 0.0:
+        raise ValueError('resolution must be positive')
+    gx = math.floor((wx - origin_x) / resolution)
+    gy = math.floor((wy - origin_y) / resolution)
     return gx, gy
 
 
