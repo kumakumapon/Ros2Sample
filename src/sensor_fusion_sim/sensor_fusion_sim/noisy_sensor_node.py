@@ -13,14 +13,9 @@ from sensor_fusion_sim.noise_model import (
     drift_walk,
     generate_imu_noise,
 )
+from sensor_fusion_sim.transform_utils import yaw_to_quaternion
 from sensor_msgs.msg import Imu
 from tf2_ros import TransformBroadcaster
-
-
-def _quat_from_yaw(yaw: float):
-    """Return (x, y, z, w) quaternion for a pure yaw rotation."""
-    half = yaw * 0.5
-    return (0.0, 0.0, math.sin(half), math.cos(half))
 
 
 class NoisySensorNode(Node):
@@ -171,7 +166,7 @@ class NoisySensorNode(Node):
             gyro_bias=self._gyro_bias,
         )
 
-        qx, qy, qz, qw = _quat_from_yaw(yaw)
+        qx, qy, qz, qw = yaw_to_quaternion(yaw)
 
         msg = Imu()
         msg.header.stamp = self.get_clock().now().to_msg()
@@ -197,7 +192,7 @@ class NoisySensorNode(Node):
         n_vx = vx + random.gauss(0.0, self._odom_stddev)
         n_vy = vy + random.gauss(0.0, self._odom_stddev)
 
-        qx, qy, qz, qw = _quat_from_yaw(yaw)
+        qx, qy, qz, qw = yaw_to_quaternion(yaw)
         stamp = self.get_clock().now().to_msg()
 
         odom = Odometry()

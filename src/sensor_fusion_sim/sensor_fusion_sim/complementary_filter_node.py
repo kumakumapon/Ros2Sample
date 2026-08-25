@@ -1,6 +1,5 @@
 """Complementary filter node with callback groups and dynamic parameters."""
 
-import math
 import threading
 from typing import Optional
 
@@ -15,6 +14,14 @@ from rclpy.callback_groups import (
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
 from rclpy.qos import HistoryPolicy, QoSProfile, ReliabilityPolicy
+from sensor_fusion_sim.filter_math import (
+    blend_angle,
+    complementary_filter_1d,
+)
+from sensor_fusion_sim.transform_utils import (
+    yaw_from_quaternion,
+    yaw_to_quaternion,
+)
 from sensor_msgs.msg import Imu
 from std_msgs.msg import String
 
@@ -167,13 +174,13 @@ class ComplementaryFilterNode(Node):
         with self._lock:
             self._last_gps = msg
             self._gps_count += 1
-            self._fused_x = _blend(
+            self._fused_x = complementary_filter_1d(
                 self._fused_x, msg.point.x, self._gps_alpha,
             )
-            self._fused_y = _blend(
+            self._fused_y = complementary_filter_1d(
                 self._fused_y, msg.point.y, self._gps_alpha,
             )
-            self._fused_z = _blend(
+            self._fused_z = complementary_filter_1d(
                 self._fused_z, msg.point.z, self._gps_alpha,
             )
 
@@ -181,10 +188,10 @@ class ComplementaryFilterNode(Node):
         with self._lock:
             self._last_imu = msg
             self._imu_count += 1
-            imu_yaw = _yaw_from_quaternion(msg.orientation)
-            diff = _normalize_angle(imu_yaw - self._fused_yaw)
-            self._fused_yaw = _normalize_angle(
-                self._fused_yaw + self._imu_yaw_weight * diff
+            q = msg.orientation
+            imu_yaw = yaw_from_quaternion(q.x, q.y, q.z, q.w)
+            self._fused_yaw = blend_angle(
+                self._fused_yaw, imu_yaw, self._imu_yaw_weight,
             )
 
     def _on_odom(self, msg: Odometry) -> None:
@@ -192,13 +199,13 @@ class ComplementaryFilterNode(Node):
             self._last_odom = msg
             self._odom_count += 1
             pos = msg.pose.pose.position
-            self._fused_x = _blend(
+            self._fused_x = complementary_filter_1d(
                 self._fused_x, pos.x, self._odom_alpha,
             )
-            self._fused_y = _blend(
+            self._fused_y = complementary_filter_1d(
                 self._fused_y, pos.y, self._odom_alpha,
             )
-            self._fused_z = _blend(
+            self._fused_z = complementary_filter_1d(
                 self._fused_z, pos.z, self._odom_alpha,
             )
             self._fused_vx = msg.twist.twist.linear.x
@@ -213,8 +220,10 @@ class ComplementaryFilterNode(Node):
             odom.pose.pose.position.x = self._fused_x
             odom.pose.pose.position.y = self._fused_y
             odom.pose.pose.position.z = self._fused_z
-            odom.pose.pose.orientation = _yaw_to_quaternion(
-                self._fused_yaw
+
+            qx, qy, qz, qw = yaw_to_quaternion(self._fused_yaw)
+            odom.pose.pose.orientation = Quaternion(
+                x=qx, y=qy, z=qz, w=qw,
             )
             odom.twist.twist.linear.x = self._fused_vx
             odom.twist.twist.linear.y = self._fused_vy
@@ -233,31 +242,6 @@ class ComplementaryFilterNode(Node):
                 f'alpha_odom={self._odom_alpha:.2f}'
             )
             self._diag_pub.publish(diag)
-
-
-def _blend(current: float, measured: float, alpha: float) -> float:
-    return alpha * measured + (1.0 - alpha) * current
-
-
-def _normalize_angle(angle: float) -> float:
-    while angle > math.pi:
-        angle -= 2.0 * math.pi
-    while angle < -math.pi:
-        angle += 2.0 * math.pi
-    return angle
-
-
-def _yaw_from_quaternion(q: Quaternion) -> float:
-    siny_cosp = 2.0 * (q.w * q.z + q.x * q.y)
-    cosy_cosp = 1.0 - 2.0 * (q.y * q.y + q.z * q.z)
-    return math.atan2(siny_cosp, cosy_cosp)
-
-
-def _yaw_to_quaternion(yaw: float) -> Quaternion:
-    q = Quaternion()
-    q.w = math.cos(yaw / 2.0)
-    q.z = math.sin(yaw / 2.0)
-    return q
 
 
 def main(args=None) -> None:

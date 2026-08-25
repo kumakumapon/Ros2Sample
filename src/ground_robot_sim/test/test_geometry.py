@@ -3,9 +3,12 @@
 import math
 
 from ground_robot_sim.geometry import (
+    inverse_transform_point_2d,
     normalize_angle,
     parse_circles,
+    quaternion_to_yaw,
     ray_circle_distance,
+    transform_point_2d,
     yaw_to_quaternion,
 )
 import pytest
@@ -48,6 +51,25 @@ def test_yaw_to_quaternion_zero():
     assert y == pytest.approx(0.0)
     assert z == pytest.approx(0.0)
     assert w == pytest.approx(1.0)
+
+
+def test_quaternion_to_yaw_roundtrip():
+    """Yaw converts to quaternion and recovers accurately."""
+    for yaw in [0.0, 0.5, -1.0, math.pi / 2.0, math.pi, -math.pi]:
+        x, y, z, w = yaw_to_quaternion(yaw)
+        recovered = quaternion_to_yaw(x, y, z, w)
+        assert normalize_angle(recovered) == pytest.approx(normalize_angle(yaw), abs=1e-7)
+
+
+def test_transform_point_2d_and_inverse():
+    """Forward and inverse 2D point transformations match."""
+    px, py = 1.0, 2.0
+    tx, ty = -3.0, 4.0
+    yaw = 0.6
+    wx, wy = transform_point_2d(px, py, tx, ty, yaw)
+    lx, ly = inverse_transform_point_2d(wx, wy, tx, ty, yaw)
+    assert lx == pytest.approx(px, abs=1e-9)
+    assert ly == pytest.approx(py, abs=1e-9)
 
 
 def test_parse_circles_valid():

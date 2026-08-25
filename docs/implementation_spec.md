@@ -257,7 +257,7 @@ IMU 受信時: yaw を `imu_yaw_weight` でブレンド
 
 ### 7.4 Extended Kalman Filter (`ekf_node`)
 
-`ekf_node` は状態 `x = [x, y, yaw, v, yaw_rate]` の EKF で GPS / IMU / wheel odom を融合します（`sensor_fusion_sim/ekf_math.py`）。
+`ekf_node` は状態 `x = [x, y, yaw, v, yaw_rate]` の EKF で GPS / IMU / wheel odom を融合します（`sensor_fusion_sim/ekf_math.py`）。座標変換やクォータニオン/Euler角・2D剛体変換は `sensor_fusion_sim/transform_utils.py` の純粋関数として提供されます。
 
 予測ステップは等速度・等角速度（unicycle）モデルで状態を進め、ヤコビアン `F` で共分散を伝播します。
 

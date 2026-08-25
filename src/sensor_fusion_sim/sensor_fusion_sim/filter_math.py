@@ -1,4 +1,4 @@
-"""Mathematical utilities for complementary filtering."""
+"""Mathematical utilities for complementary filtering and state estimation."""
 
 import math
 from typing import Tuple
@@ -30,6 +30,26 @@ def complementary_filter_3d(
     )
 
 
+def blend_angle(
+    current_yaw: float,
+    measured_yaw: float,
+    weight: float,
+) -> float:
+    """
+    Blend angular orientation accounting for phase wrap-around at +/- pi.
+
+    Parameters:
+        current_yaw: current heading in radians.
+        measured_yaw: new heading measurement in radians.
+        weight: weight for measurement in [0, 1].
+
+    Returns:
+        blended heading in radians wrapped to [-pi, pi].
+    """
+    diff = normalize_angle(measured_yaw - current_yaw)
+    return normalize_angle(current_yaw + weight * diff)
+
+
 def dead_reckoning_step(
     x: float,
     y: float,
@@ -50,11 +70,7 @@ def dead_reckoning_step(
 
 def normalize_angle(angle: float) -> float:
     """Wrap angle to [-pi, pi]."""
-    while angle > math.pi:
-        angle -= 2.0 * math.pi
-    while angle < -math.pi:
-        angle += 2.0 * math.pi
-    return angle
+    return math.atan2(math.sin(angle), math.cos(angle))
 
 
 def innovation(measured: float, predicted: float) -> float:

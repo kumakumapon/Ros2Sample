@@ -142,6 +142,7 @@
 | `lidar_obstacle_avoid.launch.py` | `ground_robot_node`、`lidar_obstacle_avoid` | 障害物を避けながら前進 |
 | `waypoint_follower.launch.py` | `ground_robot_node`、`waypoint_follower` | 正方形 waypoint 追従 |
 | `navigate_waypoints.launch.py` | `ground_robot_node`、`navigate_waypoints_server` | action 経由の waypoint 追従 |
+| `noisy_sensors_demo.launch.py` | `robot_state_publisher`、`ground_robot_node` | センサーノイズ付加と真値姿勢比較 |
 | `multi_robot.launch.py` | 3 組の `ground_robot_node` + `diff_drive_patrol` | namespace 付き複数台巡回 |
 | `gazebo.launch.py` | Gazebo Sim、`ros_gz_bridge`、`diff_drive_patrol` | Gazebo 連携の入口。WSL2/headless を想定して GUI は既定無効 |
 
@@ -195,6 +196,10 @@
 | `battery_demo.launch.py` | `sim_drone`、`waypoint_commander`、`battery_monitor`、`emergency_land` | 飛行、電池消費、低電池時の自動着陸 |
 | `wind_demo.launch.py` | `sim_drone`、`waypoint_commander`、`wind_disturbance`、`geofence_monitor`、`telemetry_logger` | 風外乱、境界監視、飛行統計の統合デモ |
 | `formation_demo.launch.py` | `/leader` の `sim_drone` + `waypoint_commander`、follower ごとの `sim_drone` + `formation_controller` | leader-follower の相対位置維持 |
+| `collision_avoidance_demo.launch.py` | `sim_drone`、`waypoint_commander`、`collision_avoidance` | 人工ポテンシャル法による静的・動的障害物の衝突回避 |
+| `mission_demo.launch.py` | `sim_drone`、`mission_state_machine`、`battery_monitor`、`emergency_land`、`geofence_monitor` | FSM による離陸・巡航・RTL・着陸の自動フライトミッション |
+| `mission_bt_demo.launch.py` | `sim_drone`、`mission_behavior_tree`、`battery_monitor`、`emergency_land`、`geofence_monitor` | ビヘイビアツリー（BT）によるミッション管理と /bt_trace 観察 |
+| `noisy_sensors_demo.launch.py` | `sim_drone`、`waypoint_commander` | ノイズ付きオドメトリ・IMU・真値トピックの観察 |
 | `swarm.launch.py` | namespace ごとの `sim_drone`、`waypoint_commander` | 小規模 swarm。`drone_count`、`spacing_m`、`altitude_m` で台数・配置を変更 |
 
 ## 6. マニピュレータ仕様
@@ -231,6 +236,14 @@
 | 逆運動学 | 2 リンク平面アームの IK。`elbow_up` で解の枝を選択 |
 | 到着判定 | 2 関節とも目標角との差が `tolerance_rad` 以下 |
 | 待機 | 到着後 `hold_time_sec` 待機して次目標へ進む |
+
+### 6.3 マニピュレータ launch シナリオ
+
+| launch | 主な起動ノード | シナリオ |
+| --- | --- | --- |
+| `planar_reach_demo.launch.py` | `manipulator_simulator`、`target_commander` | 平面目標列への順次到達デモ |
+| `ik_demo.launch.py` | `manipulator_simulator`、`ik_target_commander` | /target_pose topic への逆運動学（IK）リアルタイム追従 |
+| `moveit_bridge_demo.launch.py` | `manipulator_simulator`、`moveit_trajectory_bridge` | MoveIt2 等の計画軌道（JointTrajectory）のサンプリング再生 |
 
 ## 7. センサーフュージョン仕様
 

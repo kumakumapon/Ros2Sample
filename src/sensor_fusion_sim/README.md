@@ -14,6 +14,12 @@ filter is `complementary_filter_node`, while its ROS node name is
 - `ekf_node` — fuses GPS, IMU, and wheel odometry with an Extended Kalman Filter over the state `[x, y, yaw, v, yaw_rate]`, and publishes `ekf_odom` (`Odometry`, with populated pose/twist covariance) and `ekf_diagnostics` (`String`). Same callback group / executor architecture as `complementary_filter`.
 - `lifecycle_data_recorder` — a `LifecycleNode` that records `fused_odom` into a bounded buffer while in the active state and publishes recording status and summary.
 
+The package also includes ROS-independent pure-function modules:
+- `transform_utils.py` — 2D rigid transforms, quaternion/Euler conversions, and angle wrapping.
+- `filter_math.py` — complementary filtering formulas, angular blending, and dead-reckoning kinematics.
+- `noise_model.py` — Gaussian noise generators and random-walk drift models with deterministic RNG support.
+- `ekf_math.py` — unicycle prediction Jacobian, linear measurement updates, and noise covariance matrix factories.
+
 ## Build
 
 From the workspace root:

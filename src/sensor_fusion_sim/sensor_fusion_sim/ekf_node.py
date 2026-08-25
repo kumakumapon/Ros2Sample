@@ -31,6 +31,10 @@ from sensor_fusion_sim.ekf_math import (
     predict,
     update,
 )
+from sensor_fusion_sim.transform_utils import (
+    yaw_from_quaternion,
+    yaw_to_quaternion,
+)
 from sensor_msgs.msg import Imu
 from std_msgs.msg import String
 
@@ -313,7 +317,8 @@ class EkfNode(Node):
                 self._x, self._P, z, h, self._R_imu_gyro,
             )
             if self._use_imu_orientation:
-                yaw = _yaw_from_quaternion(msg.orientation)
+                q = msg.orientation
+                yaw = yaw_from_quaternion(q.x, q.y, q.z, q.w)
                 z, h = imu_yaw_measurement(yaw)
                 self._x, self._P = update(
                     self._x, self._P, z, h, self._R_imu_yaw,
@@ -334,8 +339,11 @@ class EkfNode(Node):
         odom.child_frame_id = self._child_frame_id
         odom.pose.pose.position.x = float(x[0])
         odom.pose.pose.position.y = float(x[1])
-        odom.pose.pose.orientation = _yaw_to_quaternion(
+        qx, qy, qz, qw = yaw_to_quaternion(
             normalize_angle(float(x[2]))
+        )
+        odom.pose.pose.orientation = Quaternion(
+            x=qx, y=qy, z=qz, w=qw,
         )
         odom.twist.twist.linear.x = float(x[3])
         odom.twist.twist.angular.z = float(x[4])
@@ -370,19 +378,6 @@ class EkfNode(Node):
             f'trace(P):{float(np.trace(p)):.4f}'
         )
         self._diag_pub.publish(diag)
-
-
-def _yaw_from_quaternion(q: Quaternion) -> float:
-    siny_cosp = 2.0 * (q.w * q.z + q.x * q.y)
-    cosy_cosp = 1.0 - 2.0 * (q.y * q.y + q.z * q.z)
-    return math.atan2(siny_cosp, cosy_cosp)
-
-
-def _yaw_to_quaternion(yaw: float) -> Quaternion:
-    q = Quaternion()
-    q.w = math.cos(yaw / 2.0)
-    q.z = math.sin(yaw / 2.0)
-    return q
 
 
 def main(args=None) -> None:

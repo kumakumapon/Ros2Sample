@@ -3,8 +3,8 @@
 import math
 
 import pytest
-
 from sensor_fusion_sim.filter_math import (
+    blend_angle,
     complementary_filter_1d,
     complementary_filter_3d,
     dead_reckoning_step,
@@ -37,6 +37,21 @@ def test_complementary_filter_3d_alpha_one():
         1.0,
     )
     assert result == pytest.approx((1.0, 2.0, 3.0))
+
+
+def test_blend_angle():
+    """Test angular blending across standard values and phase wrap boundaries."""
+    # Simple interpolation
+    assert blend_angle(0.0, 1.0, 0.5) == pytest.approx(0.5)
+    assert blend_angle(0.0, 1.0, 0.0) == pytest.approx(0.0)
+    assert blend_angle(0.0, 1.0, 1.0) == pytest.approx(1.0)
+
+    # Wrap around +/- pi: from 3.0 to -3.0 (difference is ~0.28 rad across pi boundary)
+    current = 3.1
+    target = -3.1
+    blended = blend_angle(current, target, 0.5)
+    # The midpoint across pi is pi or -pi
+    assert abs(abs(blended) - math.pi) < 0.1
 
 
 def test_dead_reckoning_step_stationary():

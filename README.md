@@ -3,6 +3,8 @@
 > [!WARNING]
 > **本リポジトリは検証中です。** 収録しているサンプル・ドキュメントは開発途上のものであり、すべての環境・手順で確実に動作することを確認したものではありません。利用は自己責任でお願いします。問題を見つけた場合は Issue で報告してください。
 
+[English README is available here (README.en.md)](README.en.md)
+
 **Ros2Sample** は、ROS 2 でロボット／ドローンのサンプルを学習・検証するためのワークスペースです。<br>
 このリポジトリは **日本語を第一言語** として、開発者が Ubuntu 20.04 / 24.04 / 26.04 と ROS 2 Foxy / Lyrical / Jazzy / Kilted / Rolling の環境で、依存関係の取得、ビルド、実行、CI 検証を迷わず行えることを目標にしています。
 
@@ -40,10 +42,10 @@
 
 | パッケージ | 目的 | 主な実行ファイル |
 | --- | --- | --- |
-| `ground_robot_sim` | 差動二輪風の地上ロボット、LiDAR 風停止判定、PID閉ループウェイポイント追従、障害物回避、緊急停止サービス、複数ロボット namespace の軽量サンプル | `ground_robot_node`, `diff_drive_patrol`, `lidar_obstacle_stop`, `lidar_obstacle_avoid`, `waypoint_follower` |
-| `drone_sim` | クアッドローター風の位置・PID高度制御、waypoint 指令、風外乱、ジオフェンス、フォーメーション飛行、テレメトリ、バッテリーモニター、緊急着陸、小規模 swarm namespace の軽量サンプル | `sim_drone`, `altitude_hold`, `waypoint_commander`, `wind_disturbance`, `geofence_monitor`, `formation_controller`, `telemetry_logger`, `battery_monitor`, `emergency_land` |
-| `manipulator_sim` | 2自由度平面マニピュレータの JointState / TF / 目標姿勢追従を学ぶ軽量サンプル | `manipulator_simulator`, `target_commander` |
-| `sensor_fusion_sim` | ノイズ付きセンサー、相補フィルタによるセンサーフュージョン、ライフサイクルノードを学ぶ軽量サンプル。QoS プロファイル、コールバックグループ、動的パラメータ更新の実例を含む | `noisy_sensor_node`, `complementary_filter_node`, `lifecycle_data_recorder` |
+| `ground_robot_sim` | 差動二輪風の地上ロボット、LiDAR 風停止判定、PID閉ループウェイポイント追従、障害物回避、Actionサーバー、テレオペ、緊急停止サービス、複数ロボット namespace の軽量サンプル | `ground_robot_node`, `diff_drive_patrol`, `lidar_obstacle_stop`, `lidar_obstacle_avoid`, `waypoint_follower`, `navigate_waypoints_server`, `teleop_keyboard`, `diagnostics_publisher` |
+| `drone_sim` | クアッドローター風の位置・PID高度制御、waypoint 指令、風外乱、ジオフェンス、フォーメーション飛行、衝突回避、テレメトリ、バッテリーモニター、緊急着陸、FSM / BT ミッション管理、小規模 swarm namespace の軽量サンプル | `sim_drone`, `altitude_hold`, `waypoint_commander`, `wind_disturbance`, `geofence_monitor`, `formation_controller`, `collision_avoidance`, `telemetry_logger`, `battery_monitor`, `emergency_land`, `mission_state_machine`, `mission_behavior_tree`, `diagnostics_publisher` |
+| `manipulator_sim` | 2自由度平面マニピュレータの JointState / TF / 目標姿勢追従、逆運動学（IK）、MoveIt2軌道ブリッジを学ぶ軽量サンプル | `manipulator_simulator`, `target_commander`, `ik_target_commander`, `moveit_trajectory_bridge` |
+| `sensor_fusion_sim` | ノイズ付きセンサー、相補フィルタおよび Extended Kalman Filter (EKF) によるセンサーフュージョン、ライフサイクルノードを学ぶ軽量サンプル。QoS プロファイル、コールバックグループ、動的パラメータ更新の実例を含む | `noisy_sensor_node`, `complementary_filter_node`, `ekf_node`, `lifecycle_data_recorder` |
 | `ros2_learning` | ROS 2 の基礎概念を段階的に学ぶチュートリアルパッケージ。Publisher/Subscriber、Service、Action、パラメータ、TF、ライフサイクルノードの最小構成サンプル | `minimal_publisher`, `minimal_subscriber`, `minimal_service_server`, `minimal_service_client`, `minimal_action_server`, `minimal_action_client`, `parameter_demo`, `tf_broadcaster_demo`, `tf_listener_demo`, `lifecycle_demo` |
 | `ros2_learning_cpp` | `ros2_learning` と同じ題材を rclcpp（C++）で書き比べる学習パッケージ。Publisher/Subscriber、Service、Action、カスタムインターフェースの最小構成サンプル | `minimal_publisher`, `minimal_subscriber`, `minimal_service_server`, `minimal_service_client`, `minimal_action_server`, `minimal_action_client`, `custom_interface_demo` |
 | `nav2_learning` | Navigation2 の概念を Nav2 を使わずに段階的に学ぶ学習パッケージ。OccupancyGrid マップ配信、A* 経路計画、Pure Pursuit 経路追従、Nav2 waypoint action クライアント、コストマップ監視、log-odds によるオンライン占有格子地図マッピング（SLAM入門）の軽量サンプル | `simple_map_publisher`, `simple_path_planner`, `simple_path_follower`, `nav2_waypoint_client`, `costmap_monitor`, `simple_occupancy_mapper` |
@@ -61,9 +63,11 @@
 | [`ground_robot_sim`](src/ground_robot_sim/README.md) | 差動二輪ロボット、LiDAR 停止、ウェイポイント追従、障害物回避、複数ロボット namespace |
 | [`drone_sim`](src/drone_sim/README.md) | クアッドローター、waypoint 飛行、高度維持、バッテリー監視、小規模 swarm |
 | [`manipulator_sim`](src/manipulator_sim/README.md) | 2自由度平面マニピュレータ、JointState / TF / tool pose、目標姿勢追従 |
+| [`sensor_fusion_sim`](src/sensor_fusion_sim/README.md) | ノイズ付きセンサー、相補フィルタ / EKF、ライフサイクルレコーダー |
+| [`ros2_learning`](src/ros2_learning/README.md) | ROS 2 の基礎概念（Pub/Sub, Service, Action, Param, TF, Lifecycle）を段階的に学ぶチュートリアル |
+| [`ros2_learning_cpp`](src/ros2_learning_cpp/README.md) | `ros2_learning` と同じ題材を rclcpp（C++）で学ぶチュートリアルパッケージ。rclpy ↔ rclcpp 対応表を収録 |
 | [`nav2_learning`](src/nav2_learning/README.md) | Navigation2 の概念（マップ、コストマップ、A* 経路計画、Pure Pursuit 経路追従、占有格子地図マッピング）を Nav2 なしで学ぶ学習パッケージ |
 | [`openusd_bridge`](src/openusd_bridge/README.md) | ROS 2 の odometry を OpenUSD の時系列 transform へ記録するサンプル |
-| [`ros2_learning_cpp`](src/ros2_learning_cpp/README.md) | `ros2_learning` と同じ題材を rclcpp（C++）で学ぶチュートリアルパッケージ。rclpy ↔ rclcpp 対応表を収録 |
 | [`docs/simulation_spec.md`](docs/simulation_spec.md) | 全サンプル共通の観測ポイント、topic / service / action、代表デモの詳細仕様 |
 
 ## 依存関係
@@ -170,6 +174,9 @@ ros2 run ground_robot_sim lidar_obstacle_stop
 # 閉ループウェイポイント追従サンプル
 ros2 run ground_robot_sim waypoint_follower
 
+# ウェイポイント追従 Action サーバー
+ros2 run ground_robot_sim navigate_waypoints_server
+
 # LiDAR 風データで障害物を回避するサンプル
 ros2 run ground_robot_sim lidar_obstacle_avoid
 
@@ -181,6 +188,15 @@ ros2 run drone_sim altitude_hold
 
 # waypoint 指令を publish するサンプル
 ros2 run drone_sim waypoint_commander
+
+# ドローンの衝突回避ノード
+ros2 run drone_sim collision_avoidance
+
+# ミッション状態機械（FSM）
+ros2 run drone_sim mission_state_machine
+
+# ビヘイビアツリー版ミッションノード（BT）
+ros2 run drone_sim mission_behavior_tree
 
 # バッテリーモニター（電力消費シミュレーション）
 ros2 run drone_sim battery_monitor
@@ -206,6 +222,9 @@ ros2 run manipulator_sim manipulator_simulator
 # 平面ターゲット列から関節指令を publish するサンプル
 ros2 run manipulator_sim target_commander
 
+# 逆運動学（IK）による目標位置指令サンプル
+ros2 run manipulator_sim ik_target_commander
+
 # ノイズ付きセンサー（GPS / IMU / wheel odom）を publish するサンプル
 ros2 run sensor_fusion_sim noisy_sensor_node
 
@@ -213,8 +232,17 @@ ros2 run sensor_fusion_sim noisy_sensor_node
 # 実行ファイル名は complementary_filter_node（起動後のノード名は complementary_filter）
 ros2 run sensor_fusion_sim complementary_filter_node
 
+# Extended Kalman Filter によるセンサーフュージョン
+ros2 run sensor_fusion_sim ekf_node
+
 # ライフサイクル管理のデータレコーダー
 ros2 run sensor_fusion_sim lifecycle_data_recorder
+
+# Nav2 概念学習: マップ配信、A* 経路計画、Pure Pursuit 追従、オンライン占有格子マッピング
+ros2 run nav2_learning simple_map_publisher
+ros2 run nav2_learning simple_path_planner
+ros2 run nav2_learning simple_path_follower
+ros2 run nav2_learning simple_occupancy_mapper
 
 # 地上ロボットの緊急停止サービス呼び出し例
 ros2 service call /emergency_stop std_srvs/srv/Trigger
@@ -230,27 +258,40 @@ ros2 topic list
 launch ファイルと RViz 設定も同梱しています。代表的なデモは次の通りです。
 
 ```bash
-# 地上ロボット: 巡回、LiDAR停止、ウェイポイント追従、障害物回避、複数ロボット
+# 地上ロボット: 巡回、LiDAR停止、ウェイポイント追従、Action誘導、障害物回避、センサーノイズ、複数ロボット
 ros2 launch ground_robot_sim diff_drive_patrol.launch.py
 ros2 launch ground_robot_sim lidar_obstacle_stop.launch.py
 ros2 launch ground_robot_sim waypoint_follower.launch.py
+ros2 launch ground_robot_sim navigate_waypoints.launch.py
 ros2 launch ground_robot_sim lidar_obstacle_avoid.launch.py
+ros2 launch ground_robot_sim noisy_sensors_demo.launch.py
 ros2 launch ground_robot_sim multi_robot.launch.py
 ros2 launch ground_robot_sim gazebo.launch.py use_gui:=false
 
-# ドローン: waypoint飛行、高度維持、バッテリー、風/ジオフェンス/テレメトリ、フォーメーション、小規模swarm
+# ドローン: waypoint飛行、高度維持、バッテリー、風/ジオフェンス/テレメトリ、フォーメーション、衝突回避、FSM/BTミッション、小規模swarm
 ros2 launch drone_sim single_quad_waypoint.launch.py
 ros2 launch drone_sim altitude_hold.launch.py
 ros2 launch drone_sim battery_demo.launch.py
 ros2 launch drone_sim wind_demo.launch.py
 ros2 launch drone_sim formation_demo.launch.py
+ros2 launch drone_sim collision_avoidance_demo.launch.py
+ros2 launch drone_sim mission_demo.launch.py
+ros2 launch drone_sim mission_bt_demo.launch.py
+ros2 launch drone_sim noisy_sensors_demo.launch.py
 ros2 launch drone_sim swarm.launch.py drone_count:=5
 
-# マニピュレータ: 平面到達デモ（JointState / TF / tool pose）
+# マニピュレータ: 平面到達デモ、IK目標到達デモ、MoveIt2軌道ブリッジ
 ros2 launch manipulator_sim planar_reach_demo.launch.py
+ros2 launch manipulator_sim ik_demo.launch.py
+ros2 launch manipulator_sim moveit_bridge_demo.launch.py
 
-# センサーフュージョン: ノイズ付きセンサー + 相補フィルタ + ライフサイクルレコーダー
+# センサーフュージョン: ノイズ付きセンサー + 相補フィルタ / EKF + ライフサイクルレコーダー
 ros2 launch sensor_fusion_sim sensor_fusion_demo.launch.py
+
+# Navigation2 概念学習: マップ配信、Action経由waypoint追従、オンライン占有格子地図SLAM
+ros2 launch nav2_learning simple_map_demo.launch.py
+ros2 launch nav2_learning nav2_waypoint_demo.launch.py
+ros2 launch nav2_learning occupancy_mapping_demo.launch.py
 
 # OpenUSD: 地上ロボット odometry を USD stage へ記録（別途 pxr が必要）
 ros2 launch openusd_bridge ground_robot_openusd.launch.py
@@ -312,6 +353,12 @@ ROS 2 初学者向けの段階的なチュートリアルを `docs/tutorials/` �
 | [`15_mini_projects.md`](docs/tutorials/15_mini_projects.md) | 90分 | 複数概念を組み合わせた実践課題 |
 | [`16_troubleshooting.md`](docs/tutorials/16_troubleshooting.md) | — | よくあるエラーと対処法 |
 | [`17_gazebo_integration.md`](docs/tutorials/17_gazebo_integration.md) | 60分 | Gazebo / GZ Sim と ros_gz_bridge の連携入門 |
+| [`18_testing_ros2.md`](docs/tutorials/18_testing_ros2.md) | 60分 | pytest / launch_testing による ROS 2 単体・統合テスト |
+| [`19_rosbag2.md`](docs/tutorials/19_rosbag2.md) | 45分 | rosbag2 によるトピックデータの記録・再生とプログラム解析 |
+| [`20_composition.md`](docs/tutorials/20_composition.md) | 45分 | Component と Composition（プロセス内通信） |
+| [`21_multi_robot_communication.md`](docs/tutorials/21_multi_robot_communication.md) | 45分 | マルチロボット通信と DDS Discovery / ドメイン分離 |
+| [`22_moveit2_manipulator_planning.md`](docs/tutorials/22_moveit2_manipulator_planning.md) | 60分 | MoveIt2 によるマニピュレータ経路計画入門 |
+| [`23_openusd_recording.md`](docs/tutorials/23_openusd_recording.md) | 30分 | ROS 2 の軌跡・姿勢を OpenUSD stage へ時系列記録 |
 
 ```bash
 # チュートリアル用パッケージのビルド
@@ -333,9 +380,16 @@ source install/setup.bash
 | [`docs/simulation_spec.md`](docs/simulation_spec.md) | 利用者 | 各デモで観測できる挙動、topic / service / action、主要パラメータ |
 | [`docs/implementation_spec.md`](docs/implementation_spec.md) | 実装者・レビュー担当 | ノード接続、制御式、実装上の制約、異常系、受け入れ確認 |
 | [`docs/development.md`](docs/development.md) | コントリビューター | ビルド、テスト、パッケージ追加時の更新手順 |
+| [`docs/foxglove_guide.md`](docs/foxglove_guide.md) | 利用者・可視化担当 | Foxglove Studio の接続手順と `config/foxglove/` レイアウト |
 
-## Docker 開発環境
+## Docker / Dev Container 開発環境
 
+VS Code の **Remote - Containers** (Dev Container) および Docker Compose による開発環境を用意しています。
+
+### VS Code Dev Container
+リポジトリを VS Code で開き、「Reopen in Container」を実行すると、ROS 2 環境・拡張機能・ビルド設定が自動構成されたコンテナ内で即座に開発を開始できます（設定: `.devcontainer/devcontainer.json`）。
+
+### Docker Compose CLI
 Ubuntu 26.04 + ROS 2 Lyrical の開発コンテナを既定にしています。Ubuntu 20.04 + ROS 2 Foxy など、ROS 2 公式 Docker イメージに存在する組み合わせも `ROS_DISTRO` と `UBUNTU_CODENAME` で指定できます。
 
 ```bash
@@ -428,4 +482,4 @@ source /opt/ros/rolling/setup.bash
 
 Ros2Sample is a ROS 2 workspace for robot and drone examples. Documentation and tooling are Japanese-first, with Ubuntu 20.04 / 24.04 / 26.04 and ROS 2 Foxy / Lyrical / Jazzy / Kilted / Rolling in mind. The default and CI-primary distribution is Lyrical Luth (May 2026 LTS). Use `scripts/build.sh`, `scripts/lint.sh`, and `scripts/rosdep-install.sh` for common development tasks.
 
-Packages include `ground_robot_sim` (diff-drive robot with synthetic LiDAR, PID waypoint following, emergency stop service), `drone_sim` (quadrotor with PID altitude hold, wind disturbance, geofence monitoring, formation control, telemetry logging, battery monitoring, emergency landing), `manipulator_sim` (2-DOF planar manipulator), `sensor_fusion_sim` (noisy sensors, complementary filter fusion, lifecycle node with QoS profiles and callback groups), `sample_interfaces` (custom msg/srv/action definitions for learning ROS 2 interface design), and `ros2_learning` (step-by-step tutorial package covering Publisher/Subscriber, Service, Action, Parameters, TF, and Lifecycle nodes with progressive tutorials in `docs/tutorials/`). `ros2_learning_cpp` is the rclcpp (C++) counterpart of `ros2_learning`, covering the same topics side by side with a rclpy-to-rclcpp mapping table.
+Packages include `ground_robot_sim` (diff-drive robot with synthetic LiDAR, PID waypoint following, action server, obstacle avoidance, emergency stop service), `drone_sim` (quadrotor with PID altitude hold, wind disturbance, geofence monitoring, formation control, collision avoidance, telemetry logging, battery monitoring, emergency landing, FSM/BT mission nodes), `manipulator_sim` (2-DOF planar manipulator, kinematics, IK, MoveIt2 bridge), `sensor_fusion_sim` (noisy sensors, complementary filter and EKF fusion, lifecycle node with QoS profiles and callback groups), `nav2_learning` (Nav2 concepts from scratch: map publishing, A* path planning, Pure Pursuit tracking, occupancy grid mapping), `openusd_bridge` (recording ROS 2 odometry as time-sampled OpenUSD stages), `sample_interfaces` (custom msg/srv/action definitions for learning ROS 2 interface design), and `ros2_learning` (step-by-step tutorial package covering Publisher/Subscriber, Service, Action, Parameters, TF, and Lifecycle nodes with progressive tutorials in `docs/tutorials/`). `ros2_learning_cpp` is the rclcpp (C++) counterpart of `ros2_learning`, covering the same topics side by side with a rclpy-to-rclcpp mapping table.
