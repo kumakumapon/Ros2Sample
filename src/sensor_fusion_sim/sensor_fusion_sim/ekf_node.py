@@ -1,6 +1,5 @@
 """Extended Kalman Filter node fusing GPS, IMU, and wheel odometry."""
 
-import math
 import threading
 
 from geometry_msgs.msg import PointStamped, Quaternion

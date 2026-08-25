@@ -10,29 +10,13 @@ def normalize_angle(angle: float) -> float:
 
 
 def yaw_to_quaternion(yaw: float) -> Tuple[float, float, float, float]:
-    """
-    Return (x, y, z, w) quaternion for a pure planar yaw rotation.
-
-    Parameters:
-        yaw: heading angle in radians.
-
-    Returns:
-        (x, y, z, w) normalized quaternion tuple.
-    """
+    """Return an x, y, z, w normalized quaternion for a pure planar yaw rotation."""
     half_yaw = yaw * 0.5
     return 0.0, 0.0, math.sin(half_yaw), math.cos(half_yaw)
 
 
 def yaw_from_quaternion(x: float, y: float, z: float, w: float) -> float:
-    """
-    Extract planar yaw angle in radians from an (x, y, z, w) quaternion.
-
-    Parameters:
-        x, y, z, w: quaternion components.
-
-    Returns:
-        yaw angle in radians in range [-pi, pi].
-    """
+    """Return the planar yaw angle in radians from an x, y, z, w quaternion."""
     siny_cosp = 2.0 * (w * z + x * y)
     cosy_cosp = 1.0 - 2.0 * (y * y + z * z)
     return math.atan2(siny_cosp, cosy_cosp)
@@ -43,12 +27,7 @@ def euler_to_quaternion(
     pitch: float,
     yaw: float,
 ) -> Tuple[float, float, float, float]:
-    """
-    Convert roll, pitch, and yaw angles (ZYX convention) to a quaternion.
-
-    Returns:
-        (x, y, z, w) quaternion tuple.
-    """
+    """Convert roll, pitch, and yaw angles (ZYX convention) to an x, y, z, w quaternion."""
     half_roll = roll * 0.5
     half_pitch = pitch * 0.5
     half_yaw = yaw * 0.5
@@ -73,12 +52,7 @@ def quaternion_to_euler(
     z: float,
     w: float,
 ) -> Tuple[float, float, float]:
-    """
-    Convert an (x, y, z, w) quaternion to roll, pitch, and yaw angles (radians).
-
-    Returns:
-        (roll, pitch, yaw) in radians.
-    """
+    """Convert an x, y, z, w quaternion to roll, pitch, and yaw angles in radians."""
     # Roll (x-axis rotation)
     sinr_cosp = 2.0 * (w * x + y * z)
     cosr_cosp = 1.0 - 2.0 * (x * x + y * y)

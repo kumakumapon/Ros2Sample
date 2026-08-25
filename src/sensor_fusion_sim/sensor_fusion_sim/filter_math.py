@@ -35,17 +35,7 @@ def blend_angle(
     measured_yaw: float,
     weight: float,
 ) -> float:
-    """
-    Blend angular orientation accounting for phase wrap-around at +/- pi.
-
-    Parameters:
-        current_yaw: current heading in radians.
-        measured_yaw: new heading measurement in radians.
-        weight: weight for measurement in [0, 1].
-
-    Returns:
-        blended heading in radians wrapped to [-pi, pi].
-    """
+    """Blend current and measured headings, wrapping across the +/- pi phase boundary."""
     diff = normalize_angle(measured_yaw - current_yaw)
     return normalize_angle(current_yaw + weight * diff)
 
