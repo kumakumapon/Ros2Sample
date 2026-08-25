@@ -37,6 +37,6 @@
       }
     }
   },
-  "postCreateCommand": "bash -c 'sudo rosdep init || true && rosdep update && ./scripts/rosdep-install.sh ${ROS_DISTRO:-jazzy} && ./scripts/build.sh'",
+  "postCreateCommand": "bash -c 'rosdep init || true && rosdep update && ./scripts/rosdep-install.sh ${ROS_DISTRO:-jazzy} && ./scripts/build.sh'",
   "remoteUser": "root"
 }

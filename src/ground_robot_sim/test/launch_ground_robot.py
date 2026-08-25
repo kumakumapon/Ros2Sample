@@ -1,12 +1,10 @@
 """Integration test using launch_testing for ground_robot_sim nodes."""
 
-import os
 import unittest
 
 import pytest
 
 try:
-    from ament_index_python.packages import get_package_share_directory
     from launch import LaunchDescription
     from launch_ros.actions import Node
     import launch_testing

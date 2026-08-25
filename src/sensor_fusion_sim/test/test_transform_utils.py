@@ -2,7 +2,6 @@
 
 import math
 
-import pytest
 from sensor_fusion_sim.transform_utils import (
     euler_to_quaternion,
     inverse_transform_point_2d,
