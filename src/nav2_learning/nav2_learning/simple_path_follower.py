@@ -28,9 +28,11 @@ class SimplePathFollower(Node):
         self._goal_reached: bool = False
         self._log_counter: int = 0
 
-        self.create_subscription(Path, '/plan', self._path_callback, 10)
-        self.create_subscription(Odometry, '/odom', self._odom_callback, 10)
-        self._cmd_pub = self.create_publisher(Twist, '/cmd_vel', 10)
+        # These robot-specific interfaces intentionally use relative names so
+        # the follower can be placed in a robot namespace without remapping.
+        self.create_subscription(Path, 'plan', self._path_callback, 10)
+        self.create_subscription(Odometry, 'odom', self._odom_callback, 10)
+        self._cmd_pub = self.create_publisher(Twist, 'cmd_vel', 10)
 
         rate = max(1.0, float(self.get_parameter('control_rate').value))
         self.create_timer(1.0 / rate, self._control_tick)

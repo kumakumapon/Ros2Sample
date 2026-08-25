@@ -39,10 +39,13 @@ ros2 launch openusd_bridge ground_robot_openusd.launch.py
 
 数秒走らせて `Ctrl+C` で終了すると、既定では
 `/tmp/ros2_openusd/robot_motion.usda` が保存されます。保存先は変更できます。
+既存の通常ファイルは既定で上書きするため、同じコマンドを繰り返し実行できます。
+既存ファイルを保護したい場合は `overwrite:=false` を指定します。この場合、保存先が
+既にあると `output_path` を変更するか上書きを有効にするよう明示して終了します。
 
 ```bash
 ros2 launch openusd_bridge ground_robot_openusd.launch.py \
-  output_path:=$HOME/robot_motion.usda
+  output_path:=$HOME/robot_motion.usda overwrite:=false
 ```
 
 既に動作している任意の `Odometry` topic を記録することもできます。
@@ -66,6 +69,7 @@ ros2 run openusd_bridge odom_to_usd --ros-args \
 | `robot_prim_path` | `/World/Robot` | pose を記録する absolute prim path |
 | `time_codes_per_second` | `30.0` | 1 秒あたりの USD time code |
 | `save_every_n_samples` | `30` | root layer を保存する間隔 |
+| `overwrite` | `true` | 既存の通常ファイルを上書きするか。`false` の場合は既存ファイルを検出して終了 |
 
 これは ROS 2 と OpenUSD のデータ表現を学ぶための片方向 recorder です。USD stage
 から ROS 2 への再生、TF tree 全体、sensor data、URDF の mesh/material 変換、

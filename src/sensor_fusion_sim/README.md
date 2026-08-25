@@ -5,10 +5,12 @@
 
 `sensor_fusion_sim` is a dependency-light ROS 2 Python/ament sample package for learning sensor fusion, lifecycle nodes, QoS profiles, and callback groups.
 
-The package contains four nodes:
+The package contains four ROS nodes. The executable for the complementary
+filter is `complementary_filter_node`, while its ROS node name is
+`complementary_filter`:
 
 - `noisy_sensor_node` — publishes noisy GPS (`PointStamped`, RELIABLE, 1 Hz), IMU (`Imu`, BEST_EFFORT, 50 Hz), wheel odometry (`Odometry`, RELIABLE, 10 Hz), and ground truth along a circular trajectory.
-- `complementary_filter` — fuses GPS, IMU, and wheel odometry using a complementary filter and publishes `fused_odom` (`Odometry`) and `filter_diagnostics` (`String`). Uses `ReentrantCallbackGroup` for sensor callbacks and `MutuallyExclusiveCallbackGroup` for publish timers with a `MultiThreadedExecutor`.
+- `complementary_filter_node` (ROS node name: `complementary_filter`) — fuses GPS, IMU, and wheel odometry using a complementary filter and publishes `fused_odom` (`Odometry`) and `filter_diagnostics` (`String`). Uses `ReentrantCallbackGroup` for sensor callbacks and `MutuallyExclusiveCallbackGroup` for publish timers with a `MultiThreadedExecutor`.
 - `ekf_node` — fuses GPS, IMU, and wheel odometry with an Extended Kalman Filter over the state `[x, y, yaw, v, yaw_rate]`, and publishes `ekf_odom` (`Odometry`, with populated pose/twist covariance) and `ekf_diagnostics` (`String`). Same callback group / executor architecture as `complementary_filter`.
 - `lifecycle_data_recorder` — a `LifecycleNode` that records `fused_odom` into a bounded buffer while in the active state and publishes recording status and summary.
 

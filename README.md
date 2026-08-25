@@ -43,7 +43,7 @@
 | `ground_robot_sim` | 差動二輪風の地上ロボット、LiDAR 風停止判定、PID閉ループウェイポイント追従、障害物回避、緊急停止サービス、複数ロボット namespace の軽量サンプル | `ground_robot_node`, `diff_drive_patrol`, `lidar_obstacle_stop`, `lidar_obstacle_avoid`, `waypoint_follower` |
 | `drone_sim` | クアッドローター風の位置・PID高度制御、waypoint 指令、風外乱、ジオフェンス、フォーメーション飛行、テレメトリ、バッテリーモニター、緊急着陸、小規模 swarm namespace の軽量サンプル | `sim_drone`, `altitude_hold`, `waypoint_commander`, `wind_disturbance`, `geofence_monitor`, `formation_controller`, `telemetry_logger`, `battery_monitor`, `emergency_land` |
 | `manipulator_sim` | 2自由度平面マニピュレータの JointState / TF / 目標姿勢追従を学ぶ軽量サンプル | `manipulator_simulator`, `target_commander` |
-| `sensor_fusion_sim` | ノイズ付きセンサー、相補フィルタによるセンサーフュージョン、ライフサイクルノードを学ぶ軽量サンプル。QoS プロファイル、コールバックグループ、動的パラメータ更新の実例を含む | `noisy_sensor_node`, `complementary_filter`, `lifecycle_data_recorder` |
+| `sensor_fusion_sim` | ノイズ付きセンサー、相補フィルタによるセンサーフュージョン、ライフサイクルノードを学ぶ軽量サンプル。QoS プロファイル、コールバックグループ、動的パラメータ更新の実例を含む | `noisy_sensor_node`, `complementary_filter_node`, `lifecycle_data_recorder` |
 | `ros2_learning` | ROS 2 の基礎概念を段階的に学ぶチュートリアルパッケージ。Publisher/Subscriber、Service、Action、パラメータ、TF、ライフサイクルノードの最小構成サンプル | `minimal_publisher`, `minimal_subscriber`, `minimal_service_server`, `minimal_service_client`, `minimal_action_server`, `minimal_action_client`, `parameter_demo`, `tf_broadcaster_demo`, `tf_listener_demo`, `lifecycle_demo` |
 | `ros2_learning_cpp` | `ros2_learning` と同じ題材を rclcpp（C++）で書き比べる学習パッケージ。Publisher/Subscriber、Service、Action、カスタムインターフェースの最小構成サンプル | `minimal_publisher`, `minimal_subscriber`, `minimal_service_server`, `minimal_service_client`, `minimal_action_server`, `minimal_action_client`, `custom_interface_demo` |
 | `nav2_learning` | Navigation2 の概念を Nav2 を使わずに段階的に学ぶ学習パッケージ。OccupancyGrid マップ配信、A* 経路計画、Pure Pursuit 経路追従、Nav2 waypoint action クライアント、コストマップ監視、log-odds によるオンライン占有格子地図マッピング（SLAM入門）の軽量サンプル | `simple_map_publisher`, `simple_path_planner`, `simple_path_follower`, `nav2_waypoint_client`, `costmap_monitor`, `simple_occupancy_mapper` |
@@ -210,7 +210,8 @@ ros2 run manipulator_sim target_commander
 ros2 run sensor_fusion_sim noisy_sensor_node
 
 # 相補フィルタによるセンサーフュージョン
-ros2 run sensor_fusion_sim complementary_filter
+# 実行ファイル名は complementary_filter_node（起動後のノード名は complementary_filter）
+ros2 run sensor_fusion_sim complementary_filter_node
 
 # ライフサイクル管理のデータレコーダー
 ros2 run sensor_fusion_sim lifecycle_data_recorder

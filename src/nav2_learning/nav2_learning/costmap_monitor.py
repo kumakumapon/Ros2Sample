@@ -9,7 +9,7 @@ from rclpy.qos import QoSDurabilityPolicy, QoSProfile, QoSReliabilityPolicy
 
 
 class CostmapMonitor(Node):
-    """Subscribe to /map and periodically log analysis for learning about costmaps."""
+    """Subscribe to the shared /map and periodically log costmap analysis."""
 
     def __init__(self) -> None:
         super().__init__('costmap_monitor')
@@ -23,6 +23,7 @@ class CostmapMonitor(Node):
             reliability=QoSReliabilityPolicy.RELIABLE,
             durability=QoSDurabilityPolicy.TRANSIENT_LOCAL,
         )
+        # The map is intentionally global so every robot observes one world.
         self.create_subscription(OccupancyGrid, '/map', self._map_callback, latched_qos)
 
         rate = max(0.1, float(self.get_parameter('analyze_rate').value))

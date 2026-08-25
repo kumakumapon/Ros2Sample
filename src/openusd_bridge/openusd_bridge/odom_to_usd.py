@@ -6,7 +6,7 @@ from openusd_bridge.sampling import (
     relative_time_code,
     stamp_to_seconds,
 )
-from openusd_bridge.usd_stage import RobotPoseStage
+from openusd_bridge.usd_stage import OpenUsdUnavailableError, RobotPoseStage
 import rclpy
 from rclpy.node import Node
 
@@ -24,6 +24,7 @@ class OdomToUsd(Node):
         self.declare_parameter('robot_prim_path', '/World/Robot')
         self.declare_parameter('time_codes_per_second', 30.0)
         self.declare_parameter('save_every_n_samples', 30)
+        self.declare_parameter('overwrite', True)
 
         input_topic = str(self.get_parameter('input_topic').value)
         output_path = str(self.get_parameter('output_path').value)
@@ -34,10 +35,12 @@ class OdomToUsd(Node):
         self._save_every_n_samples = max(
             1, int(self.get_parameter('save_every_n_samples').value),
         )
+        overwrite = bool(self.get_parameter('overwrite').value)
         self._stage = RobotPoseStage(
             output_path,
             robot_prim_path,
             self._time_codes_per_second,
+            overwrite,
         )
         self._first_stamp_seconds = None
         self._sample_count = 0
@@ -89,15 +92,22 @@ def main(args=None) -> None:
     """Run the odometry-to-OpenUSD recorder."""
     rclpy.init(args=args)
     node = None
+    logger = rclpy.logging.get_logger('odom_to_usd')
     try:
         node = OdomToUsd()
         rclpy.spin(node)
     except KeyboardInterrupt:
         pass
+    except (OpenUsdUnavailableError, OSError, RuntimeError, ValueError) as exc:
+        logger.error(str(exc))
     finally:
         if node is not None:
-            node.destroy_node()
-        rclpy.shutdown()
+            try:
+                node.destroy_node()
+            except RuntimeError as exc:
+                logger.error(f'Failed to finalize OpenUSD recording: {exc}')
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 if __name__ == '__main__':

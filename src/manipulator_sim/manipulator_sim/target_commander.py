@@ -44,6 +44,7 @@ class TargetCommander(Node):
         self.current_joint_positions = [0.0, 0.0]
         self.current_index = 0
         self.arrival_time = None
+        self._completed_logged = False
 
         self._command_pub = self.create_publisher(JointState, 'joint_target', 10)
         self.create_subscription(JointState, 'joint_states', self._on_joint_states, 10)
@@ -63,6 +64,9 @@ class TargetCommander(Node):
         now = self.get_clock().now()
         target_joint_positions = self.joint_targets[self.current_index]
         self._publish_joint_target(now.to_msg(), target_joint_positions)
+
+        if self._completed_logged:
+            return
 
         tolerance = float(self.get_parameter('tolerance_rad').value)
         hold_time = float(self.get_parameter('hold_time_sec').value)
@@ -94,6 +98,10 @@ class TargetCommander(Node):
             self.current_index += 1
         elif bool(self.get_parameter('loop').value):
             self.current_index = 0
+        else:
+            self._completed_logged = True
+            self.get_logger().info(f'Completed {len(self.joint_targets)} target(s)')
+            return
         self.get_logger().info(
             f'Commanding target {self.current_index}: {self.joint_targets[self.current_index]}'
         )

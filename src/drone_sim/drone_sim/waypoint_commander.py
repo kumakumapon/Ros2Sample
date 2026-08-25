@@ -38,6 +38,7 @@ class WaypointCommander(Node):
         self.current_index = 0
         self.current_position: Point3 = (0.0, 0.0, 0.0)
         self.arrival_time = None
+        self._completed_logged = False
 
         self.setpoint_pub = self.create_publisher(PoseStamped, 'setpoint_pose', 10)
         self.create_subscription(Odometry, 'odom', self._on_odom, 10)
@@ -55,7 +56,7 @@ class WaypointCommander(Node):
     def _publish_setpoint(self) -> None:
         target = self.waypoints[self.current_index]
         now = self.get_clock().now()
-        if dist(self.current_position, target) <= self.tolerance_m:
+        if not self._completed_logged and dist(self.current_position, target) <= self.tolerance_m:
             if self.arrival_time is None:
                 self.arrival_time = now
                 self.get_logger().info(f'Reached waypoint {self.current_index}: {target}')
@@ -80,6 +81,10 @@ class WaypointCommander(Node):
             self.current_index += 1
         elif self.loop:
             self.current_index = 0
+        else:
+            self._completed_logged = True
+            self.get_logger().info(f'Completed {len(self.waypoints)} waypoint(s)')
+            return
         self.get_logger().info(
             f'Commanding waypoint {self.current_index}: {self.waypoints[self.current_index]}'
         )

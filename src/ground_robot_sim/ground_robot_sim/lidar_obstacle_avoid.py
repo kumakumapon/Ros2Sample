@@ -30,12 +30,28 @@ class LidarObstacleAvoid(Node):
         self.avoid_distance = float(
             self.get_parameter('avoid_distance').value
         )
+        self._validate_distance_pair(self.stop_distance, self.avoid_distance)
         rate = max(1.0, float(self.get_parameter('publish_rate').value))
         self.create_timer(1.0 / rate, self.tick)
 
         self.add_on_set_parameters_callback(self._on_param_change)
 
         self.get_logger().info('Started lidar obstacle avoid controller')
+
+    @staticmethod
+    def _validate_distance_pair(stop_distance: float, avoid_distance: float) -> None:
+        """Raise ValueError unless obstacle distances form a valid control range."""
+        for name, value in (
+            ('stop_distance', stop_distance),
+            ('avoid_distance', avoid_distance),
+        ):
+            if not math.isfinite(value) or value <= 0.0:
+                raise ValueError(f'{name} must be a finite value > 0.0')
+        if not stop_distance < avoid_distance:
+            raise ValueError(
+                'stop_distance must be strictly less than avoid_distance '
+                f'(got stop_distance={stop_distance}, avoid_distance={avoid_distance})'
+            )
 
     def _on_param_change(
         self, params: list,

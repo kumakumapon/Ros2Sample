@@ -49,13 +49,15 @@ class SimplePathPlanner(Node):
             reliability=QoSReliabilityPolicy.RELIABLE,
             durability=QoSDurabilityPolicy.TRANSIENT_LOCAL,
         )
+        # Maps are shared between robot namespaces, so this remains global.
         self.create_subscription(OccupancyGrid, '/map', self._map_callback, latched_qos)
-        self._plan_pub = self.create_publisher(Path, '/plan', 10)
-        self._plan_raw_pub = self.create_publisher(Path, '/plan_raw', 10)
+        # Plans belong to a robot namespace, unlike the shared world map.
+        self._plan_pub = self.create_publisher(Path, 'plan', 10)
+        self._plan_raw_pub = self.create_publisher(Path, 'plan_raw', 10)
         self.create_service(Trigger, '~/plan_path', self._plan_service_callback)
 
         if bool(self.get_parameter('use_odom_start').value):
-            self.create_subscription(Odometry, '/odom', self._odom_callback, 10)
+            self.create_subscription(Odometry, 'odom', self._odom_callback, 10)
 
         replan_rate = float(self.get_parameter('replan_rate').value)
         if replan_rate > 0.0:

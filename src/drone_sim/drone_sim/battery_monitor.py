@@ -18,15 +18,20 @@ class BatteryMonitor(Node):
         self.declare_parameter('motor_power_w', 80.0)
         self.declare_parameter('critical_pct', 15.0)
         self.declare_parameter('publish_rate_hz', 1.0)
+        self.declare_parameter('cmd_timeout_sec', 0.6)
 
         self._capacity_wh = float(self.get_parameter('capacity_wh').value)
         self._idle_power_w = float(self.get_parameter('idle_power_w').value)
         self._motor_power_w = float(self.get_parameter('motor_power_w').value)
         self._critical_pct = float(self.get_parameter('critical_pct').value)
+        self._cmd_timeout_sec = max(
+            0.0, float(self.get_parameter('cmd_timeout_sec').value)
+        )
         publish_rate_hz = float(self.get_parameter('publish_rate_hz').value)
 
         self._remaining_wh = self._capacity_wh
         self._throttle = 0.0
+        self._last_cmd_time = None
         self._critical_warned = False
         self._last_tick = self.get_clock().now()
 
@@ -49,11 +54,17 @@ class BatteryMonitor(Node):
         vz = abs(msg.linear.z)
         wz = abs(msg.angular.z)
         self._throttle = min(1.0, (vx + vy + vz + wz) / 4.0)
+        self._last_cmd_time = self.get_clock().now()
 
     def _tick(self) -> None:
         now = self.get_clock().now()
         dt_sec = max((now - self._last_tick).nanoseconds * 1e-9, 1e-4)
         self._last_tick = now
+
+        if self._last_cmd_time is not None:
+            cmd_age_sec = (now - self._last_cmd_time).nanoseconds * 1e-9
+            if cmd_age_sec > self._cmd_timeout_sec:
+                self._throttle = 0.0
 
         power_w = self._idle_power_w + self._throttle * self._motor_power_w
         drain_wh = power_w * (dt_sec / 3600.0)
