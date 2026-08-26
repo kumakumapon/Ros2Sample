@@ -93,6 +93,9 @@ jobs:
           source /opt/ros/${{ matrix.ros_distro }}/setup.bash
           source ./scripts/xml-catalog.sh
           colcon test --event-handlers console_direct+
+          source install/setup.bash
+          launch_test src/ground_robot_sim/test/launch_ground_robot.py
+          launch_test src/drone_sim/test/launch_sim_drone.py
           echo '```' >> "$GITHUB_STEP_SUMMARY"
           colcon test-result --verbose 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"

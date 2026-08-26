@@ -1,0 +1,78 @@
+{
+  "configById": {
+    "3D!1": {
+      "cameraState": {
+        "perspective": true,
+        "distance": 12.0,
+        "phi": 60.0,
+        "thetaOffset": 45.0,
+        "targetOffset": [0, 0, 0],
+        "target": [0, 0, 0],
+        "fovy": 45.0,
+        "near": 0.5,
+        "far": 5000.0
+      },
+      "followMode": "follow-pose",
+      "followTf": "base_link",
+      "scene": {
+        "transforms": {
+          "showLabels": true,
+          "axisScale": 0.5
+        }
+      },
+      "transforms": {
+        "frame:odom": { "visible": true },
+        "frame:base_link": { "visible": true },
+        "frame:base_scan": { "visible": true },
+        "frame:world": { "visible": true }
+      },
+      "topics": {
+        "/scan": { "visible": true, "colorField": "intensity" },
+        "/odom": { "visible": true },
+        "/fused_odom": { "visible": true },
+        "/ekf_odom": { "visible": true },
+        "/ground_truth": { "visible": true },
+        "/pose": { "visible": true },
+        "/robot_description": { "visible": true }
+      }
+    },
+    "Plot!1": {
+      "title": "Odometry Velocity & Battery",
+      "paths": [
+        { "value": "/odom.twist.twist.linear.x", "enabled": true, "label": "vx (m/s)", "color": "#4e79a7" },
+        { "value": "/odom.twist.twist.angular.z", "enabled": true, "label": "wz (rad/s)", "color": "#f28e2c" },
+        { "value": "/battery.percentage", "enabled": true, "label": "Battery (%)", "color": "#59a14f" }
+      ],
+      "minYValue": -2.0,
+      "maxYValue": 2.0,
+      "showLegend": true
+    },
+    "Diagnostics!1": {
+      "title": "Diagnostics & Health",
+      "topic": "/diagnostics",
+      "collapsedNodes": []
+    },
+    "TopicList!1": {
+      "title": "Active ROS Topics"
+    }
+  },
+  "globalVariables": {},
+  "userNodes": {},
+  "playbackConfig": {
+    "speed": 1
+  },
+  "layout": {
+    "first": "3D!1",
+    "second": {
+      "first": "Plot!1",
+      "second": {
+        "first": "Diagnostics!1",
+        "second": "TopicList!1",
+        "direction": "row"
+      },
+      "direction": "column"
+    },
+    "direction": "row",
+    "splitPercentage": 60
+  }
+}

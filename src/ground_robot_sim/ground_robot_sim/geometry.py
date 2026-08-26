@@ -3,7 +3,6 @@
 import math
 from typing import List, Sequence, Tuple
 
-
 Circle = Tuple[float, float, float]
 
 
@@ -13,9 +12,56 @@ def yaw_to_quaternion(yaw: float) -> Tuple[float, float, float, float]:
     return 0.0, 0.0, math.sin(half_yaw), math.cos(half_yaw)
 
 
+def quaternion_to_yaw(x: float, y: float, z: float, w: float) -> float:
+    """Return planar yaw angle in radians from an x, y, z, w quaternion."""
+    siny_cosp = 2.0 * (w * z + x * y)
+    cosy_cosp = 1.0 - 2.0 * (y * y + z * z)
+    return math.atan2(siny_cosp, cosy_cosp)
+
+
 def normalize_angle(angle: float) -> float:
     """Wrap an angle to [-pi, pi]."""
     return math.atan2(math.sin(angle), math.cos(angle))
+
+
+def transform_point_2d(
+    x: float,
+    y: float,
+    tx: float,
+    ty: float,
+    yaw: float,
+) -> Tuple[float, float]:
+    """
+    Apply a 2D rigid transform (rotation by yaw followed by translation (tx, ty)).
+
+    Computes: p_world = R(yaw) * p_local + t.
+    """
+    cos_yaw = math.cos(yaw)
+    sin_yaw = math.sin(yaw)
+    x_out = x * cos_yaw - y * sin_yaw + tx
+    y_out = x * sin_yaw + y * cos_yaw + ty
+    return x_out, y_out
+
+
+def inverse_transform_point_2d(
+    x: float,
+    y: float,
+    tx: float,
+    ty: float,
+    yaw: float,
+) -> Tuple[float, float]:
+    """
+    Apply inverse 2D rigid transform (world point to frame at (tx, ty, yaw)).
+
+    Computes: p_local = R(-yaw) * (p_world - t).
+    """
+    dx = x - tx
+    dy = y - ty
+    cos_yaw = math.cos(yaw)
+    sin_yaw = math.sin(yaw)
+    x_out = dx * cos_yaw + dy * sin_yaw
+    y_out = -dx * sin_yaw + dy * cos_yaw
+    return x_out, y_out
 
 
 def ray_circle_distance(

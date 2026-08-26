@@ -1,7 +1,8 @@
 """Unit tests for sensor_fusion_sim.noise_model."""
 
-import pytest
+import random
 
+import pytest
 from sensor_fusion_sim.noise_model import (
     add_gaussian_noise,
     add_gaussian_noise_3d,
@@ -21,6 +22,16 @@ def test_add_gaussian_noise_mean_approx_zero():
 def test_add_gaussian_noise_zero_stddev():
     """With stddev=0, output equals input."""
     assert add_gaussian_noise(3.14, 0.0) == pytest.approx(3.14)
+    assert add_gaussian_noise(3.14, -1.0) == pytest.approx(3.14)
+
+
+def test_add_gaussian_noise_deterministic_rng():
+    """Providing a seeded Random instance yields deterministic results."""
+    rng1 = random.Random(42)
+    rng2 = random.Random(42)
+    val1 = add_gaussian_noise(10.0, 1.5, rng=rng1)
+    val2 = add_gaussian_noise(10.0, 1.5, rng=rng2)
+    assert val1 == val2
 
 
 def test_add_gaussian_noise_3d_zero_stddev():

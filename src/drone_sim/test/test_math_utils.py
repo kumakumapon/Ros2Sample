@@ -2,7 +2,13 @@
 
 import math
 
-from drone_sim.math_utils import clamp, normalize_angle, quat_from_euler
+from drone_sim.math_utils import (
+    clamp,
+    euler_from_quat,
+    normalize_angle,
+    quat_from_euler,
+    yaw_from_quat,
+)
 import pytest
 
 
@@ -67,3 +73,26 @@ def test_quat_from_euler_unit_norm():
     x, y, z, w = quat_from_euler(roll, pitch, yaw)
     norm = math.sqrt(x * x + y * y + z * z + w * w)
     assert norm == pytest.approx(1.0)
+
+
+def test_euler_from_quat_roundtrip():
+    """Euler angles convert to quaternion and back accurately."""
+    test_cases = [
+        (0.0, 0.0, 0.0),
+        (0.2, -0.3, 0.7),
+        (-0.5, 0.4, -1.1),
+    ]
+    for roll, pitch, yaw in test_cases:
+        qx, qy, qz, qw = quat_from_euler(roll, pitch, yaw)
+        r_rec, p_rec, y_rec = euler_from_quat(qx, qy, qz, qw)
+        assert r_rec == pytest.approx(roll, abs=1e-6)
+        assert p_rec == pytest.approx(pitch, abs=1e-6)
+        assert y_rec == pytest.approx(yaw, abs=1e-6)
+
+
+def test_yaw_from_quat_yaw_only():
+    """Planar yaw extraction from a yaw-only quaternion."""
+    for yaw in [0.0, 0.5, -1.2, math.pi / 2.0]:
+        qx, qy, qz, qw = quat_from_euler(0.0, 0.0, yaw)
+        extracted_yaw = yaw_from_quat(qx, qy, qz, qw)
+        assert extracted_yaw == pytest.approx(yaw, abs=1e-6)
