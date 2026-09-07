@@ -6,7 +6,9 @@ on:
       - "src/**"
       - "scripts/**"
       - "docs/**"
-      - "README.md"
+      - "README*.md"
+      - "docker/**"
+      - ".devcontainer/**"
       - "ros2.repos"
       - ".github/workflows/**"
   push:
@@ -15,7 +17,9 @@ on:
       - "src/**"
       - "scripts/**"
       - "docs/**"
-      - "README.md"
+      - "README*.md"
+      - "docker/**"
+      - ".devcontainer/**"
       - "ros2.repos"
       - ".github/workflows/**"
   workflow_dispatch:
@@ -94,8 +98,7 @@ jobs:
           source ./scripts/xml-catalog.sh
           colcon test --event-handlers console_direct+
           source install/setup.bash
-          launch_test src/ground_robot_sim/test/launch_ground_robot.py
-          launch_test src/drone_sim/test/launch_sim_drone.py
+          bash scripts/test-integration.sh
           echo '```' >> "$GITHUB_STEP_SUMMARY"
           colcon test-result --verbose 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"

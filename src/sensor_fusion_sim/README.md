@@ -1,5 +1,7 @@
 # sensor_fusion_sim
 
+[日本語](README.md) | [English](README.en.md)
+
 > [!WARNING]
 > 本パッケージは検証中であり、確実に動作確認したものではありません。詳細はリポジトリルートの README を参照してください。
 
@@ -25,7 +27,7 @@ The package also includes ROS-independent pure-function modules:
 From the workspace root:
 
 ```bash
-colcon build --packages-select sensor_fusion_sim
+colcon build --packages-up-to sensor_fusion_sim
 source install/setup.bash
 ```
 
@@ -114,3 +116,11 @@ ros2 topic echo /ekf_odom
 ```
 
 The EKF additionally reports its state uncertainty: `ekf_diagnostics` includes `trace(P)`, the sum of the state covariance diagonal, which shrinks as sensor updates arrive and grows during prediction-only intervals. `ekf_odom` also fills in `pose.covariance` and `twist.covariance` (36-element row-major 6x6 arrays) with the relevant `x`/`y`/`yaw`/`v`/`yaw_rate` entries from `P`, which `fused_odom` leaves at zero.
+
+## 座標と時刻
+
+軌道の t=0 は起動時（シミュレーション時計の場合は最初の非ゼロ時刻）です。
+時計を巻き戻すと軌道も t=0 から再開します。位置は `world`、IMU 加速度と
+Odometry の twist は機体座標系（+X 前・+Y 左・+Z 上）です。
+重力除去済みのモデルであり、既定の IMU 加速度はノイズ・バイアスを除いて
+`(0, 0.45, 0)` m/s²、前進速度は `1.5` m/s です。

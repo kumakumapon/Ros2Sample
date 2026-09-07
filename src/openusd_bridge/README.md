@@ -1,5 +1,7 @@
 # openusd_bridge
 
+[日本語](README.md) | [English](README.en.md)
+
 ROS 2 の `nav_msgs/msg/Odometry` を購読し、位置・姿勢を OpenUSD の時系列
 `Xform` として `.usda` / `.usdc` / `.usd` ファイルへ記録する最小サンプルです。
 
@@ -31,7 +33,7 @@ OpenUSD のビルドや別ディストリビューションを使う場合も、
 
 ```bash
 source /opt/ros/$ROS_DISTRO/setup.bash
-colcon build --symlink-install --packages-select openusd_bridge
+colcon build --symlink-install --packages-up-to openusd_bridge
 source install/setup.bash
 
 ros2 launch openusd_bridge ground_robot_openusd.launch.py

@@ -1,5 +1,7 @@
 # ground_robot_sim
 
+[日本語](README.md) | [English](README.en.md)
+
 > [!WARNING]
 > 本パッケージは検証中であり、確実に動作確認したものではありません。詳細はリポジトリルートの README を参照してください。
 
@@ -16,7 +18,7 @@ The simulator node accepts `cmd_vel` and publishes:
 From the workspace root:
 
 ```bash
-colcon build --packages-select ground_robot_sim
+colcon build --packages-up-to ground_robot_sim
 source install/setup.bash
 ```
 

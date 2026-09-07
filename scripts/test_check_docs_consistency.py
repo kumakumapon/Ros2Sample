@@ -6,7 +6,7 @@ from pathlib import Path
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import check_docs_consistency as checker
+import check_docs_consistency as checker  # noqa: E402
 
 
 class ConsoleScriptNamesTest(unittest.TestCase):
@@ -92,6 +92,55 @@ class PackageReadmeTest(unittest.TestCase):
 
             self.assertEqual(
                 errors, ['sample_interfaces: パッケージ README.md がありません'])
+
+
+class RootInventoryTest(unittest.TestCase):
+    def test_executable_in_other_package_does_not_hide_missing_row(self):
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            pkg = root / 'src' / 'demo'
+            pkg.mkdir(parents=True)
+            (pkg / 'setup.py').write_text(
+                "from setuptools import setup\n"
+                "setup(entry_points={'console_scripts': ['node = demo.node:main']})\n")
+            for filename in ('README.md', 'README.en.md'):
+                (pkg / filename).write_text('# Demo\n')
+                (root / filename).write_text(
+                    f'[demo](src/demo/{filename})\n'
+                    '| `demo` | no executable |\n'
+                    '| `other` | `node` |\n')
+            errors = []
+            with patch.object(checker, 'REPO_ROOT', root):
+                checker.check_root_inventory([pkg], errors)
+            self.assertEqual(len(errors), 2)
+            self.assertTrue(all('missing executable node' in e for e in errors))
+
+    def test_missing_tutorial_is_reported(self):
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            tutorials = root / 'docs/tutorials'
+            (tutorials / 'en').mkdir(parents=True)
+            (tutorials / '24_new.md').write_text('# New chapter\n')
+            (tutorials / 'en/00_learning_path.md').write_text('# Path\n')
+            (root / 'README.md').write_text('# Root\n')
+            errors = []
+            with patch.object(checker, 'REPO_ROOT', root):
+                checker.check_tutorial_index(errors)
+            self.assertEqual(len(errors), 2)
+            self.assertTrue(all('24_new.md' in e for e in errors))
+
+    def test_broken_local_link_is_reported_but_external_link_is_ignored(self):
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'README.md').write_text(
+                '[missing](missing.md) [web](https://example.com) [anchor](#intro)\n')
+            errors = []
+            with patch.object(checker, 'REPO_ROOT', root):
+                checker.check_entry_links([], errors)
+            self.assertEqual(errors, ['README.md: broken link missing.md'])
 
 
 if __name__ == '__main__':

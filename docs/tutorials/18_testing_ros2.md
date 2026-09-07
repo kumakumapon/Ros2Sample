@@ -415,3 +415,29 @@ colcon test-result --verbose
 テストを書く習慣は、コードを変更するたびにデグレードがないことを確認する安全網になります。新しい関数を追加したとき、バグを修正したとき、リファクタリングをしたときにテストを更新・追加する習慣をつけてください。
 
 デバッグの方法論については [チュートリアル 13: ROS 2 デバッグ入門](13_debugging_ros2_systems.md) を参照してください。
+
+## リポジトリの実ノード統合テスト
+
+ワークスペースを全体ビルドした後、以下を実行します。
+
+```bash
+source install/setup.bash
+bash scripts/test-integration.sh
+```
+
+| シナリオ | 検証内容 |
+| --- | --- |
+| `drone_sim/test/launch_sim_drone.py` | odom / pose / imu のレート・stamp、cmd_vel による移動 |
+| `ground_robot_sim/test/launch_ground_robot.py` | scan、緊急停止のラッチと解除、停止中の指令拒否 |
+| `sensor_fusion_sim/test/launch_sensor_fusion.py` | GPS / IMU / wheel_odom の消費、融合出力、機体座標系 |
+| `ros2_learning/test/launch_action.py` | 空 goal 拒否、feedback、2 waypoint の完了 result |
+
+`sample_utils.testing.RosTestCase` でノード解放・QoS・単調時計のタイムアウトを共有します。
+DDS 発見を待ってから観測し、シナリオごとの namespace で相互干渉を避けています。
+CI は同じスクリプトを `colcon test` の後に実行し、1件でも失敗すると非ゼロで終了します。
+`launch_*.py` は通常の pytest 自動探索から分離してあるため、`colcon test` だけでは
+この4件は実行されません。ROS が未導入の場合もこのスクリプトはスキップせず失敗します。
+手動デモを止めて実行し、`ROS_DOMAIN_ID` は同じ実験グループ内で揃えてください。
+
+公式の [launch_testing 解説](https://docs.ros.org/en/jazzy/Tutorials/Intermediate/Testing/Integration.html)
+も参照してください。

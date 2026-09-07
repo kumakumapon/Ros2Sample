@@ -463,3 +463,9 @@ ros2 service call /drone_1/get_robot_status sample_interfaces/srv/GetRobotStatus
 - 新しいノード、topic、service、action を追加したら、この文書の該当表を更新してください。
 - launch ファイルや config YAML の既定値を変更した場合は、シナリオ表とパラメータ表を更新してください。
 - 物理エンジンや外部依存を追加した場合は、README、`package.xml`、`ros2.repos`、Docker 設定もあわせて更新してください。
+
+## 共通ライブラリ
+
+`sample_utils` は PID・ガウスノイズ・角度正規化を共有します。実行ノードはありません。
+各シミュレータを単独ビルドするときも `colcon build --packages-up-to <package>` を使い、
+ワークスペース内依存を含めます。

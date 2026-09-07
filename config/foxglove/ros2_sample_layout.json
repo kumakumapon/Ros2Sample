@@ -27,6 +27,7 @@
         "frame:world": { "visible": true }
       },
       "topics": {
+        "/visualization_markers": { "visible": true },
         "/scan": { "visible": true, "colorField": "intensity" },
         "/odom": { "visible": true },
         "/fused_odom": { "visible": true },

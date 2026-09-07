@@ -1,86 +1,52 @@
-"""Integration test using launch_testing for drone_sim nodes."""
+"""Launch integration scenario; execute with launch_test after building."""
 
-import unittest
+from launch import LaunchDescription
+from launch_ros.actions import Node
+import launch_testing.actions
+from sample_utils.testing import RosTestCase
 
-import pytest
-
-try:
-    from launch import LaunchDescription
-    from launch_ros.actions import Node
-    import launch_testing
-    import launch_testing.actions
-    from nav_msgs.msg import Odometry
-    import rclpy
-    from rclpy.node import Node as RclpyNode
-    HAVE_LAUNCH_TESTING = True
-except ImportError:
-    HAVE_LAUNCH_TESTING = False
+from geometry_msgs.msg import PoseStamped, Twist
+from nav_msgs.msg import Odometry
+from sensor_msgs.msg import Imu
 
 
-@pytest.mark.launch_test
 def generate_test_description():
-    """Generate launch description for drone integration testing."""
-    if not HAVE_LAUNCH_TESTING:
-        return LaunchDescription()
-
-    drone_node = Node(
-        package='drone_sim',
-        executable='sim_drone',
-        name='sim_drone',
-        parameters=[{'publish_rate_hz': 50.0}],
-    )
-
+    """Start only the drone under test in its own namespace."""
     return LaunchDescription([
-        drone_node,
+        Node(package='drone_sim', executable='sim_drone', namespace='test_drone',
+             parameters=[{'publish_rate_hz': 50.0}]),
         launch_testing.actions.ReadyToTest(),
     ])
 
 
-class TestSimDroneLaunch(unittest.TestCase):
-    """Integration test checking drone simulation startup and odometry publishing."""
+class TestDrone(RosTestCase):
+    """Validate all sensor streams, publication rates and commanded motion."""
 
-    @classmethod
-    def setUpClass(cls):
-        if not HAVE_LAUNCH_TESTING:
-            return
-        rclpy.init()
+    namespace = 'test_drone'
 
-    @classmethod
-    def tearDownClass(cls):
-        if not HAVE_LAUNCH_TESTING:
-            return
-        rclpy.shutdown()
-
-    def setUp(self):
-        if not HAVE_LAUNCH_TESTING:
-            self.skipTest('launch_testing or ROS 2 dependencies not available')
-        self.node = RclpyNode('test_drone_client')
-
-    def tearDown(self):
-        if hasattr(self, 'node'):
-            self.node.destroy_node()
-
-    def test_odom_topic_published(self):
-        """Verify that sim_drone publishes valid Odometry messages."""
-        received_msgs = []
-
-        sub = self.node.create_subscription(
-            Odometry,
-            'odom',
-            lambda msg: received_msgs.append(msg),
-            10,
-        )
-
-        start_time = self.node.get_clock().now()
-        while len(received_msgs) < 3:
-            rclpy.spin_once(self.node, timeout_sec=0.1)
-            elapsed = (self.node.get_clock().now() - start_time).nanoseconds * 1e-9
-            if elapsed > 5.0:
-                break
-
-        self.node.destroy_subscription(sub)
-        self.assertGreaterEqual(
-            len(received_msgs),
-            1,
-            'Failed to receive odom messages within timeout',
-        )
+    def test_sensors_and_motion(self):
+        """Receive 50 Hz sensor data and move forward on repeated cmd_vel input."""
+        odom = self.receive(Odometry, 'odom')
+        pose = self.receive(PoseStamped, 'pose')
+        imu = self.receive(Imu, 'imu')
+        self.wait_until(lambda: all(len(m) >= 3 for m in (odom, pose, imu)))
+        start_x = odom[-1].pose.pose.position.x
+        for stream in (odom, pose, imu):
+            stream.clear()
+        self.spin_for(2.0)
+        for stream in (odom, pose, imu):
+            self.assertGreaterEqual(len(stream), 30)
+            stamps = [m.header.stamp.sec + m.header.stamp.nanosec * 1e-9 for m in stream]
+            self.assertTrue(all(b > a for a, b in zip(stamps, stamps[1:])))
+            rate = (len(stamps) - 1) / (stamps[-1] - stamps[0])
+            self.assertGreater(rate, 20.0)
+            self.assertLess(rate, 80.0)
+        publisher = self.node.create_publisher(Twist, 'cmd_vel', 10)
+        self.wait_until(lambda: publisher.get_subscription_count() > 0)
+        command = Twist()
+        command.linear.x = 0.5
+        timer = self.node.create_timer(0.05, lambda: publisher.publish(command))
+        self.addCleanup(self.node.destroy_timer, timer)
+        self.wait_until(lambda: odom[-1].pose.pose.position.x > start_x + 0.3)
+        self.assertEqual(odom[-1].header.frame_id, 'odom')
+        self.assertEqual(imu[-1].header.frame_id, 'base_link')

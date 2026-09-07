@@ -13,5 +13,7 @@ services:
     environment:
       ROS_DISTRO: ${ROS_DISTRO:-lyrical}
     command: bash -lc "source /opt/ros/${ROS_DISTRO:-lyrical}/setup.bash && bash"
+    ports:
+      - "127.0.0.1:8765:8765"
     tty: true
     stdin_open: true

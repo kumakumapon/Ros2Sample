@@ -1,5 +1,7 @@
 # drone_sim
 
+[日本語](README.md) | [English](README.en.md)
+
 > [!WARNING]
 > 本パッケージは検証中であり、確実に動作確認したものではありません。詳細はリポジトリルートの README を参照してください。
 
@@ -12,7 +14,7 @@ The simulator is intentionally kinematic rather than physics-heavy. It publishes
 From the workspace root:
 
 ```bash
-colcon build --packages-select drone_sim
+colcon build --packages-up-to drone_sim
 source install/setup.bash
 ```
 
@@ -217,3 +219,16 @@ For a swarm drone, prefix topics with the namespace, for example `/drone_1/cmd_v
   wind/geofence/telemetry, formation, swarm, and collision avoidance launch files.
 - `config/*.yaml` - sample parameters.
 - `urdf/quadrotor.urdf` and `rviz/drone_sim.rviz` - visualization helpers.
+
+## Foxglove / RViz Marker デモ
+
+```bash
+ros2 launch drone_sim foxglove_demo.launch.py
+```
+
+`visualization_markers` が `visualization_msgs/MarkerArray` を `visualization_markers` へ発行します。
+境界（`bounds_min` / `bounds_max`）、経路（XYZ 三つ組の `waypoints`）、
+各機体（`odom_topics`）を表示し、`frame_id` の既定値は `odom` です。
+境界は表示専用で、飛行制限を課しません。`geofence_monitor` と併用する場合は
+両ノードの境界パラメータを揃えてください。
+[Foxglove チュートリアル](../../docs/tutorials/24_foxglove_visualization.md) を参照してください。

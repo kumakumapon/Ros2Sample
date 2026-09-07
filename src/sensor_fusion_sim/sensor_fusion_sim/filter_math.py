@@ -1,7 +1,8 @@
 """Mathematical utilities for complementary filtering and state estimation."""
 
-import math
 from typing import Tuple
+
+from sample_utils.angles import normalize_angle  # noqa: F401
 
 
 def complementary_filter_1d(
@@ -38,41 +39,3 @@ def blend_angle(
     """Blend current and measured headings, wrapping across the +/- pi phase boundary."""
     diff = normalize_angle(measured_yaw - current_yaw)
     return normalize_angle(current_yaw + weight * diff)
-
-
-def dead_reckoning_step(
-    x: float,
-    y: float,
-    yaw: float,
-    vx: float,
-    vy: float,
-    yaw_rate: float,
-    dt: float,
-) -> Tuple[float, float, float]:
-    """Predict next pose from current pose and velocity, return (x, y, yaw)."""
-    cos_yaw = math.cos(yaw)
-    sin_yaw = math.sin(yaw)
-    x_new = x + (vx * cos_yaw - vy * sin_yaw) * dt
-    y_new = y + (vx * sin_yaw + vy * cos_yaw) * dt
-    yaw_new = normalize_angle(yaw + yaw_rate * dt)
-    return (x_new, y_new, yaw_new)
-
-
-def normalize_angle(angle: float) -> float:
-    """Wrap angle to [-pi, pi]."""
-    return math.atan2(math.sin(angle), math.cos(angle))
-
-
-def innovation(measured: float, predicted: float) -> float:
-    """Compute the innovation between a measured and predicted value."""
-    return measured - predicted
-
-
-def euclidean_distance(
-    x1: float,
-    y1: float,
-    x2: float,
-    y2: float,
-) -> float:
-    """Compute 2D Euclidean distance."""
-    return math.hypot(x2 - x1, y2 - y1)

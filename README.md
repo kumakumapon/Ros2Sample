@@ -43,13 +43,14 @@
 | パッケージ | 目的 | 主な実行ファイル |
 | --- | --- | --- |
 | `ground_robot_sim` | 差動二輪風の地上ロボット、LiDAR 風停止判定、PID閉ループウェイポイント追従、障害物回避、Actionサーバー、テレオペ、緊急停止サービス、複数ロボット namespace の軽量サンプル | `ground_robot_node`, `diff_drive_patrol`, `lidar_obstacle_stop`, `lidar_obstacle_avoid`, `waypoint_follower`, `navigate_waypoints_server`, `teleop_keyboard`, `diagnostics_publisher` |
-| `drone_sim` | クアッドローター風の位置・PID高度制御、waypoint 指令、風外乱、ジオフェンス、フォーメーション飛行、衝突回避、テレメトリ、バッテリーモニター、緊急着陸、FSM / BT ミッション管理、小規模 swarm namespace の軽量サンプル | `sim_drone`, `altitude_hold`, `waypoint_commander`, `wind_disturbance`, `geofence_monitor`, `formation_controller`, `collision_avoidance`, `telemetry_logger`, `battery_monitor`, `emergency_land`, `mission_state_machine`, `mission_behavior_tree`, `diagnostics_publisher` |
+| `drone_sim` | クアッドローター風の位置・PID高度制御、waypoint 指令、風外乱、ジオフェンス、フォーメーション飛行、衝突回避、テレメトリ、バッテリーモニター、緊急着陸、FSM / BT ミッション管理、小規模 swarm namespace の軽量サンプル | `sim_drone`, `altitude_hold`, `waypoint_commander`, `wind_disturbance`, `geofence_monitor`, `formation_controller`, `collision_avoidance`, `telemetry_logger`, `battery_monitor`, `emergency_land`, `mission_state_machine`, `mission_behavior_tree`, `diagnostics_publisher`, `visualization_markers` |
 | `manipulator_sim` | 2自由度平面マニピュレータの JointState / TF / 目標姿勢追従、逆運動学（IK）、MoveIt2軌道ブリッジを学ぶ軽量サンプル | `manipulator_simulator`, `target_commander`, `ik_target_commander`, `moveit_trajectory_bridge` |
 | `sensor_fusion_sim` | ノイズ付きセンサー、相補フィルタおよび Extended Kalman Filter (EKF) によるセンサーフュージョン、ライフサイクルノードを学ぶ軽量サンプル。QoS プロファイル、コールバックグループ、動的パラメータ更新の実例を含む | `noisy_sensor_node`, `complementary_filter_node`, `ekf_node`, `lifecycle_data_recorder` |
 | `ros2_learning` | ROS 2 の基礎概念を段階的に学ぶチュートリアルパッケージ。Publisher/Subscriber、Service、Action、パラメータ、TF、ライフサイクルノードの最小構成サンプル | `minimal_publisher`, `minimal_subscriber`, `minimal_service_server`, `minimal_service_client`, `minimal_action_server`, `minimal_action_client`, `parameter_demo`, `tf_broadcaster_demo`, `tf_listener_demo`, `lifecycle_demo` |
 | `ros2_learning_cpp` | `ros2_learning` と同じ題材を rclcpp（C++）で書き比べる学習パッケージ。Publisher/Subscriber、Service、Action、カスタムインターフェースの最小構成サンプル | `minimal_publisher`, `minimal_subscriber`, `minimal_service_server`, `minimal_service_client`, `minimal_action_server`, `minimal_action_client`, `custom_interface_demo` |
 | `nav2_learning` | Navigation2 の概念を Nav2 を使わずに段階的に学ぶ学習パッケージ。OccupancyGrid マップ配信、A* 経路計画、Pure Pursuit 経路追従、Nav2 waypoint action クライアント、コストマップ監視、log-odds によるオンライン占有格子地図マッピング（SLAM入門）の軽量サンプル | `simple_map_publisher`, `simple_path_planner`, `simple_path_follower`, `nav2_waypoint_client`, `costmap_monitor`, `simple_occupancy_mapper` |
 | `openusd_bridge` | `Odometry` の位置・姿勢を OpenUSD stage の時系列 `Xform` として保存するオプション連携サンプル | `odom_to_usd` |
+| `sample_utils` | PID・ガウスノイズ・角度正規化の共通ライブラリ | ライブラリ（実行ファイルなし） |
 | `sample_interfaces` | カスタム msg / srv / action 定義（ROS 2 インターフェース定義の学習用） | _(ライブラリパッケージ：実行ファイルなし)_ |
 
 検出結果は `colcon list` で確認できます。
@@ -362,7 +363,7 @@ ROS 2 初学者向けの段階的なチュートリアルを `docs/tutorials/` �
 
 ```bash
 # チュートリアル用パッケージのビルド
-colcon build --packages-select \
+colcon build --packages-up-to \
   ros2_learning \
   ros2_learning_cpp \
   sample_interfaces \
@@ -483,3 +484,16 @@ source /opt/ros/rolling/setup.bash
 Ros2Sample is a ROS 2 workspace for robot and drone examples. Documentation and tooling are Japanese-first, with Ubuntu 20.04 / 24.04 / 26.04 and ROS 2 Foxy / Lyrical / Jazzy / Kilted / Rolling in mind. The default and CI-primary distribution is Lyrical Luth (May 2026 LTS). Use `scripts/build.sh`, `scripts/lint.sh`, and `scripts/rosdep-install.sh` for common development tasks.
 
 Packages include `ground_robot_sim` (diff-drive robot with synthetic LiDAR, PID waypoint following, action server, obstacle avoidance, emergency stop service), `drone_sim` (quadrotor with PID altitude hold, wind disturbance, geofence monitoring, formation control, collision avoidance, telemetry logging, battery monitoring, emergency landing, FSM/BT mission nodes), `manipulator_sim` (2-DOF planar manipulator, kinematics, IK, MoveIt2 bridge), `sensor_fusion_sim` (noisy sensors, complementary filter and EKF fusion, lifecycle node with QoS profiles and callback groups), `nav2_learning` (Nav2 concepts from scratch: map publishing, A* path planning, Pure Pursuit tracking, occupancy grid mapping), `openusd_bridge` (recording ROS 2 odometry as time-sampled OpenUSD stages), `sample_interfaces` (custom msg/srv/action definitions for learning ROS 2 interface design), and `ros2_learning` (step-by-step tutorial package covering Publisher/Subscriber, Service, Action, Parameters, TF, and Lifecycle nodes with progressive tutorials in `docs/tutorials/`). `ros2_learning_cpp` is the rclcpp (C++) counterpart of `ros2_learning`, covering the same topics side by side with a rclpy-to-rclcpp mapping table.
+
+## 開発・可視化の追加ガイド
+
+- [sample_utils 共通ライブラリ](src/sample_utils/README.md)
+- [24 Foxglove・Marker 可視化](docs/tutorials/24_foxglove_visualization.md)
+- [Dev Container / X11 / Wayland / XQuartz](docs/development.md#gui-コンテナ)
+- [英語の学習パスと基礎章](docs/tutorials/en/00_learning_path.md)
+
+```bash
+ros2 launch drone_sim foxglove_demo.launch.py
+# ビルド後のノード間統合テスト（4シナリオ）
+bash scripts/test-integration.sh
+```

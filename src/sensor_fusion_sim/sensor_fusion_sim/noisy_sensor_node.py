@@ -1,7 +1,6 @@
 """Simulated platform moving in a circle, publishing noisy sensor data."""
 
 import math
-import random
 
 from geometry_msgs.msg import PointStamped, TransformStamped
 from nav_msgs.msg import Odometry
@@ -9,11 +8,16 @@ import rclpy
 from rclpy.node import Node
 from rclpy.qos import HistoryPolicy, QoSProfile, ReliabilityPolicy
 from sensor_fusion_sim.noise_model import (
+    add_gaussian_noise,
     add_gaussian_noise_3d,
     drift_walk,
     generate_imu_noise,
 )
-from sensor_fusion_sim.transform_utils import yaw_to_quaternion
+from sensor_fusion_sim.trajectory_clock import TrajectoryClock
+from sensor_fusion_sim.transform_utils import (
+    inverse_transform_point_2d,
+    yaw_to_quaternion,
+)
 from sensor_msgs.msg import Imu
 from tf2_ros import TransformBroadcaster
 
@@ -22,6 +26,7 @@ class NoisySensorNode(Node):
     """Publish noisy GPS, IMU, and wheel odometry for a circular trajectory."""
 
     def __init__(self) -> None:
+        """Initialize sensor publishers and an elapsed ROS-time trajectory."""
         super().__init__('noisy_sensor_node')
 
         self.declare_parameter('circle_radius', 5.0)
@@ -70,6 +75,7 @@ class NoisySensorNode(Node):
             self.get_parameter('base_frame_id').value
         )
 
+        self._trajectory_clock = TrajectoryClock(self.get_clock().now().nanoseconds)
         self._accel_bias = 0.0
         self._gyro_bias = 0.0
 
@@ -114,9 +120,10 @@ class NoisySensorNode(Node):
             f'omega={self._omega} rad/s'
         )
 
-    def _elapsed(self) -> float:
+    def _elapsed(self, now=None) -> float:
         """Return seconds since node start."""
-        return self.get_clock().now().nanoseconds * 1e-9
+        now = self.get_clock().now() if now is None else now
+        return self._trajectory_clock.elapsed(now.nanoseconds)
 
     def _true_state(self, t: float):
         """Return (x, y, yaw, vx, vy, yaw_rate) for circular motion."""
@@ -137,13 +144,14 @@ class NoisySensorNode(Node):
 
     def _publish_gps(self) -> None:
         """Publish noisy GPS position."""
-        t = self._elapsed()
+        now = self.get_clock().now()
+        t = self._elapsed(now)
         x, y, _, _, _, _ = self._true_state(t)
         nx, ny, _ = add_gaussian_noise_3d(
             x, y, 0.0, self._gps_stddev, 0.0
         )
         msg = PointStamped()
-        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.stamp = now.to_msg()
         msg.header.frame_id = self._frame_id
         msg.point.x = nx
         msg.point.y = ny
@@ -152,9 +160,13 @@ class NoisySensorNode(Node):
 
     def _publish_imu(self) -> None:
         """Publish noisy IMU reading and update bias drift."""
-        t = self._elapsed()
-        x_t, y_t, yaw, _, _, yaw_rate = self._true_state(t)
-        ax_true, ay_true = self._true_accel(t)
+        now = self.get_clock().now()
+        t = self._elapsed(now)
+        _, _, yaw, _, _, yaw_rate = self._true_state(t)
+        ax_world, ay_world = self._true_accel(t)
+        ax_true, ay_true = inverse_transform_point_2d(
+            ax_world, ay_world, 0.0, 0.0, yaw
+        )
 
         self._accel_bias = drift_walk(self._accel_bias, 0.001, 0.05)
         self._gyro_bias = drift_walk(self._gyro_bias, 0.0005, 0.01)
@@ -169,7 +181,7 @@ class NoisySensorNode(Node):
         qx, qy, qz, qw = yaw_to_quaternion(yaw)
 
         msg = Imu()
-        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.stamp = now.to_msg()
         msg.header.frame_id = self._base_frame_id
         msg.orientation.x = qx
         msg.orientation.y = qy
@@ -183,17 +195,20 @@ class NoisySensorNode(Node):
 
     def _publish_odom(self) -> None:
         """Publish noisy wheel odometry and exact ground truth."""
-        t = self._elapsed()
+        now = self.get_clock().now()
+        t = self._elapsed(now)
         x, y, yaw, vx, vy, yaw_rate = self._true_state(t)
 
         nx, ny, _ = add_gaussian_noise_3d(
             x, y, 0.0, self._odom_stddev, 0.0
         )
-        n_vx = vx + random.gauss(0.0, self._odom_stddev)
-        n_vy = vy + random.gauss(0.0, self._odom_stddev)
+        # Odometry twist is expressed in child_frame_id, not the world frame.
+        vx, vy = inverse_transform_point_2d(vx, vy, 0.0, 0.0, yaw)
+        n_vx = add_gaussian_noise(vx, self._odom_stddev)
+        n_vy = add_gaussian_noise(vy, self._odom_stddev)
 
         qx, qy, qz, qw = yaw_to_quaternion(yaw)
-        stamp = self.get_clock().now().to_msg()
+        stamp = now.to_msg()
 
         odom = Odometry()
         odom.header.stamp = stamp

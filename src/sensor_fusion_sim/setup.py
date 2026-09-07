@@ -1,3 +1,5 @@
+"""Install the sensor_fusion_sim package and its documentation."""
+
 from glob import glob
 from os.path import join
 
@@ -14,7 +16,7 @@ setup(
             'share/ament_index/resource_index/packages',
             [join('resource', package_name)],
         ),
-        (join('share', package_name), ['package.xml']),
+        (join('share', package_name), ['package.xml', 'README.md', 'README.en.md']),
         (
             join('share', package_name, 'config'),
             glob(join('config', '*.yaml')),
