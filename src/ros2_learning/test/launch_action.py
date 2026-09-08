@@ -1,14 +1,13 @@
 """Launch integration scenario; execute with launch_test after building."""
 
+from action_msgs.msg import GoalStatus
+from geometry_msgs.msg import PoseStamped
 from launch import LaunchDescription
 from launch_ros.actions import Node
 import launch_testing.actions
-from sample_utils.testing import RosTestCase
-
-from action_msgs.msg import GoalStatus
-from geometry_msgs.msg import PoseStamped
 from rclpy.action import ActionClient
 from sample_interfaces.action import NavigateWaypoints
+from sample_utils.testing import RosTestCase
 
 
 def generate_test_description():

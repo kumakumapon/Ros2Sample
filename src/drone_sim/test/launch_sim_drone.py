@@ -1,12 +1,11 @@
 """Launch integration scenario; execute with launch_test after building."""
 
+from geometry_msgs.msg import PoseStamped, Twist
 from launch import LaunchDescription
 from launch_ros.actions import Node
 import launch_testing.actions
-from sample_utils.testing import RosTestCase
-
-from geometry_msgs.msg import PoseStamped, Twist
 from nav_msgs.msg import Odometry
+from sample_utils.testing import RosTestCase
 from sensor_msgs.msg import Imu
 
 
