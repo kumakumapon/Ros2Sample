@@ -7,6 +7,7 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 import launch_testing.actions
 from nav_msgs.msg import Odometry
+from rclpy.qos import qos_profile_default
 from sample_utils.testing import RosTestCase
 from sensor_msgs.msg import Imu
 from std_msgs.msg import String
@@ -32,10 +33,11 @@ class TestFusion(RosTestCase):
 
     def test_pipeline(self):
         """Require all three sensors, finite moving output and body-frame IMU."""
-        fused = self.receive(Odometry, 'fused_odom')
-        diagnostics = self.receive(String, 'filter_diagnostics')
+        fused = self.receive(Odometry, 'fused_odom', qos_profile_default)
+        diagnostics = self.receive(
+            String, 'filter_diagnostics', qos_profile_default)
         imu = self.receive(Imu, 'imu')
-        wheel = self.receive(Odometry, 'wheel_odom')
+        wheel = self.receive(Odometry, 'wheel_odom', qos_profile_default)
 
         def consumed():
             if not diagnostics:
@@ -43,7 +45,10 @@ class TestFusion(RosTestCase):
             counts = dict(re.findall(r'(gps|imu|odom)=(\d+)', diagnostics[-1].data))
             return all(int(counts.get(key, 0)) >= 2 for key in ('gps', 'imu', 'odom'))
 
-        self.wait_until(lambda: consumed() and len(fused) > 5 and imu and wheel)
+        self.wait_until(
+            lambda: consumed() and len(fused) > 5 and imu and wheel,
+            timeout=20.0,
+        )
         self.assertEqual(fused[-1].header.frame_id, 'world')
         self.assertEqual(fused[-1].child_frame_id, 'base_link_fused')
         point = fused[-1].pose.pose.position

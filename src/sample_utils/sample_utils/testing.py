@@ -2,10 +2,11 @@
 
 import time
 import unittest
+from typing import Optional
 
 import rclpy
 from rclpy.executors import SingleThreadedExecutor
-from rclpy.qos import qos_profile_sensor_data
+from rclpy.qos import QoSProfile, qos_profile_sensor_data
 
 
 class RosTestCase(unittest.TestCase):
@@ -38,11 +39,17 @@ class RosTestCase(unittest.TestCase):
         while time.monotonic() < deadline:
             self.executor.spin_once(timeout_sec=0.05)
 
-    def receive(self, message_type, topic):
-        """Collect messages with sensor QoS compatible with both reliability modes."""
+    def receive(
+        self,
+        message_type,
+        topic,
+        qos_profile: Optional[QoSProfile] = None,
+    ):
+        """Collect messages with a caller-selected or sensor-data QoS profile."""
         messages = []
         self.node.create_subscription(
-            message_type, topic, messages.append, qos_profile_sensor_data)
+            message_type, topic, messages.append,
+            qos_profile or qos_profile_sensor_data)
         return messages
 
     def result(self, future, timeout=10.0):
