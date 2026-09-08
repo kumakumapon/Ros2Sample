@@ -46,9 +46,18 @@ class TestFusion(RosTestCase):
             return all(int(counts.get(key, 0)) >= 2 for key in ('gps', 'imu', 'odom'))
 
         self.wait_until(
-            lambda: consumed() and len(fused) > 5 and imu and wheel,
+            lambda: len(fused) > 5 and imu and wheel,
             timeout=20.0,
         )
+        try:
+            self.wait_until(consumed, timeout=20.0)
+        except AssertionError:
+            latest = diagnostics[-1].data if diagnostics else '<none>'
+            self.fail(
+                'Filter diagnostics did not report all inputs: '
+                f'fused={len(fused)}, imu={len(imu)}, wheel={len(wheel)}, '
+                f'latest={latest!r}'
+            )
         self.assertEqual(fused[-1].header.frame_id, 'world')
         self.assertEqual(fused[-1].child_frame_id, 'base_link_fused')
         point = fused[-1].pose.pose.position
