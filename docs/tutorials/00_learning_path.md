@@ -1,5 +1,7 @@
 # ROS 2 Jazzy 学習パス
 
+[English](en/00_learning_path.md)
+
 このリポジトリは、ROS 2 Jazzy の基礎概念を実際に動くコードで段階的に学ぶための学習用リポジトリです。シミュレーションパッケージ（ドローン・地上ロボット・マニピュレータ・センサフュージョン）と、基礎概念を最小構成で学ぶ `ros2_learning` パッケージで構成されています。
 
 ## 対象読者
@@ -443,3 +445,8 @@ rosdep install --from-paths src --ignore-src -r -y
 **`ros2 pkg list` にパッケージが表示されない場合**
 
 `source install/setup.bash` を実行し忘れている可能性があります。ビルド後は必ずこのコマンドを実行してください。ターミナルを新しく開いた場合も同様です。
+
+## 可視化の発展
+
+[24 Foxglove と Marker](24_foxglove_visualization.md) では、リモート接続、境界・経路・
+フォーメーションの表示と RViz との使い分けを学びます。

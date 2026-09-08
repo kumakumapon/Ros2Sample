@@ -47,18 +47,19 @@ The primary language of this repository is **Japanese**, but this English docume
 
 ## Packages Overview
 
-The workspace contains 9 ROS 2 packages:
+The workspace contains 10 ROS 2 packages:
 
 | Package | Description | Key Executables |
 | --- | --- | --- |
 | `ground_robot_sim` | 2D differential-drive ground robot simulation, synthetic LiDAR obstacle stop/avoidance, closed-loop PID waypoint follower, Action server, teleoperation, emergency stop service, and multi-robot namespaces. | `ground_robot_node`, `diff_drive_patrol`, `lidar_obstacle_stop`, `lidar_obstacle_avoid`, `waypoint_follower`, `navigate_waypoints_server`, `teleop_keyboard`, `diagnostics_publisher` |
-| `drone_sim` | 3D kinematic quadrotor simulation, 3D waypoint follower, PID altitude hold, wind disturbance, geofence monitor, leader-follower formation, collision avoidance, telemetry logging, battery consumption model, emergency landing, and FSM / Behavior Tree mission nodes. | `sim_drone`, `altitude_hold`, `waypoint_commander`, `wind_disturbance`, `geofence_monitor`, `formation_controller`, `collision_avoidance`, `telemetry_logger`, `battery_monitor`, `emergency_land`, `mission_state_machine`, `mission_behavior_tree`, `diagnostics_publisher` |
+| `drone_sim` | 3D kinematic quadrotor simulation, 3D waypoint follower, PID altitude hold, wind disturbance, geofence monitor, leader-follower formation, collision avoidance, telemetry logging, battery consumption model, emergency landing, and FSM / Behavior Tree mission nodes. | `sim_drone`, `altitude_hold`, `waypoint_commander`, `wind_disturbance`, `geofence_monitor`, `formation_controller`, `collision_avoidance`, `telemetry_logger`, `battery_monitor`, `emergency_land`, `mission_state_machine`, `mission_behavior_tree`, `diagnostics_publisher`, `visualization_markers` |
 | `manipulator_sim` | 2-DOF planar manipulator simulation, JointState / TF / tool pose tracking, forward & inverse kinematics (IK), and MoveIt2 planned trajectory bridge. | `manipulator_simulator`, `target_commander`, `ik_target_commander`, `moveit_trajectory_bridge` |
 | `sensor_fusion_sim` | Sensor fusion with noisy GPS, IMU, and wheel odometry using a complementary filter and Extended Kalman Filter (EKF). Features lifecycle nodes, QoS profiles, callback groups, dynamic parameter tuning, and pure math/transform utilities. | `noisy_sensor_node`, `complementary_filter_node`, `ekf_node`, `lifecycle_data_recorder` |
 | `nav2_learning` | Nav2 concepts implemented from scratch without Nav2 dependencies: OccupancyGrid map publishing, A* path planning with line-of-sight shortcutting & smoothing, Pure Pursuit path tracking, dynamic obstacle replanning, and online log-odds occupancy mapping (SLAM fundamentals). | `simple_map_publisher`, `simple_path_planner`, `simple_path_follower`, `nav2_waypoint_client`, `costmap_monitor`, `simple_occupancy_mapper` |
 | `openusd_bridge` | Records ROS 2 `Odometry` messages as time-sampled OpenUSD animation stages (`.usd`, `.usda`, `.usdc`) for scene visualization and exchange. | `odom_to_usd` |
 | `ros2_learning` | Progressive ROS 2 tutorial package (Python/rclpy) covering Pub/Sub, Service, Action, Parameters, TF2, and Lifecycle nodes. | `minimal_publisher`, `minimal_subscriber`, `minimal_service_server`, `minimal_service_client`, `minimal_action_server`, `minimal_action_client`, `parameter_demo`, `tf_broadcaster_demo`, `tf_listener_demo`, `lifecycle_demo` |
 | `ros2_learning_cpp` | C++ (rclcpp) counterpart to `ros2_learning`, demonstrating the same patterns side by side with a rclpy ↔ rclcpp mapping guide. | `minimal_publisher`, `minimal_subscriber`, `minimal_service_server`, `minimal_service_client`, `minimal_action_server`, `minimal_action_client`, `custom_interface_demo` |
+| `sample_utils` | Shared PID, Gaussian noise and angle helpers | Library (no executables) |
 | `sample_interfaces` | Custom message, service, and action definitions (`RobotStatus.msg`, `GetRobotStatus.srv`, `NavigateWaypoints.action`). | _(Interface-only library package)_ |
 
 ---
@@ -238,17 +239,17 @@ ros2 launch openusd_bridge ground_robot_openusd.launch.py
 
 ## Learning Tutorials
 
-Step-by-step learning tutorials are located in [`docs/tutorials/`](docs/tutorials/):
+Chapters 00–06 are available in English; later links lead to Japanese originals. Step-by-step learning tutorials are located in [`docs/tutorials/`](docs/tutorials/):
 
 | Tutorial | Estimated Time | Topic |
 | --- | --- | --- |
-| [`00_learning_path.md`](docs/tutorials/00_learning_path.md) | 5 min | Learning path overview & environment setup |
-| [`01_publisher_subscriber.md`](docs/tutorials/01_publisher_subscriber.md) | 30 min | Topic communication basics |
-| [`02_service_action.md`](docs/tutorials/02_service_action.md) | 45 min | Services & Actions |
-| [`03_launch_params.md`](docs/tutorials/03_launch_params.md) | 30 min | Launch files and parameters |
-| [`04_tf_transforms.md`](docs/tutorials/04_tf_transforms.md) | 45 min | TF2 and coordinate transformations |
-| [`05_custom_interfaces.md`](docs/tutorials/05_custom_interfaces.md) | 30 min | Custom message, service, and action definitions |
-| [`06_lifecycle_qos.md`](docs/tutorials/06_lifecycle_qos.md) | 45 min | Lifecycle nodes & QoS profiles |
+| [`00_learning_path.md`](docs/tutorials/en/00_learning_path.md) | 5 min | Learning path overview & environment setup |
+| [`01_publisher_subscriber.md`](docs/tutorials/en/01_publisher_subscriber.md) | 30 min | Topic communication basics |
+| [`02_service_action.md`](docs/tutorials/en/02_service_action.md) | 45 min | Services & Actions |
+| [`03_launch_params.md`](docs/tutorials/en/03_launch_params.md) | 30 min | Launch files and parameters |
+| [`04_tf_transforms.md`](docs/tutorials/en/04_tf_transforms.md) | 45 min | TF2 and coordinate transformations |
+| [`05_custom_interfaces.md`](docs/tutorials/en/05_custom_interfaces.md) | 30 min | Custom message, service, and action definitions |
+| [`06_lifecycle_qos.md`](docs/tutorials/en/06_lifecycle_qos.md) | 45 min | Lifecycle nodes & QoS profiles |
 | [`07_nav2_overview.md`](docs/tutorials/07_nav2_overview.md) | 45 min | Navigation2 architecture overview |
 | [`08_costmap_and_map.md`](docs/tutorials/08_costmap_and_map.md) | 45 min | Maps, costmaps, and inflation layers |
 | [`09_path_planning.md`](docs/tutorials/09_path_planning.md) | 60 min | A* path planning, shortcutting, and dynamic replanning |
@@ -308,3 +309,18 @@ Contributions, bug reports, and suggestions are welcome! Please refer to [`CONTR
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
+
+## English package guides
+
+- [ground_robot_sim](src/ground_robot_sim/README.en.md)
+- [drone_sim](src/drone_sim/README.en.md)
+- [manipulator_sim](src/manipulator_sim/README.en.md)
+- [sensor_fusion_sim](src/sensor_fusion_sim/README.en.md)
+- [nav2_learning](src/nav2_learning/README.en.md)
+- [ros2_learning](src/ros2_learning/README.en.md)
+- [ros2_learning_cpp](src/ros2_learning_cpp/README.en.md)
+- [openusd_bridge](src/openusd_bridge/README.en.md)
+- [sample_utils](src/sample_utils/README.en.md)
+
+Run `bash scripts/test-integration.sh` after building the workspace for the four real-node scenarios.
+See [Foxglove and markers](docs/tutorials/24_foxglove_visualization.md) and [container GUI setup](docs/development.md) (Japanese).

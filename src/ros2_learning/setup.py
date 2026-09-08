@@ -17,7 +17,7 @@ setup(
             [join('resource', package_name)],
         ),
         (join('share', package_name), ['package.xml']),
-        (join('share', package_name), ['README.md']),
+        (join('share', package_name), ['README.md', 'README.en.md']),
         (
             join('share', package_name, 'config'),
             glob(join('config', '*.yaml')),

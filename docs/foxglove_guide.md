@@ -77,4 +77,10 @@ ros2 launch drone_sim single_quad_waypoint.launch.py
 
 - **ground_robot_sim**: `/scan` のレイ交点と障害物回避の軌跡、TF (`odom -> base_link -> base_scan`)
 - **drone_sim**: 3D 空間内の waypoint 追従、高度 ($z$) 制御、風外乱による揺らぎ
-- **sensor_fusion_sim**: ノイズ付きオドメトリ (`/odom`)、相補フィルタ (`/fused_odom`)、EKF (`/ekf_odom`)、および真値 (`/ground_truth`) の比較
+- **sensor_fusion_sim**: ノイズ付きオドメトリ (`/wheel_odom`)、相補フィルタ (`/fused_odom`)、EKF (`/ekf_odom`)、および真値 (`/ground_truth`) の比較
+
+## 5. カスタム可視化の実行例
+
+ジオフェンス・経路・3機のリアルタイム Marker を表示する
+[チュートリアル24](tutorials/24_foxglove_visualization.md) を追加しました。
+`ros2 launch drone_sim foxglove_demo.launch.py` で開始できます。

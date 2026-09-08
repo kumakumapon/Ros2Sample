@@ -47,3 +47,73 @@ colcon test-result --verbose
 5. テストがある場合は `colcon test` と `colcon test-result --verbose` を実行する。
 6. README のパッケージ一覧と実行例を更新する。
 7. topic / service / action / launch / parameter を変更した場合は、`docs/simulation_spec.md` と `docs/implementation_spec.md`、該当パッケージ README を更新する。
+
+## Dev Container
+
+VS Code の Dev Containers 拡張を導入し、リポジトリを開いて Reopen in Container を実行します。
+`.devcontainer/devcontainer.json` は既存 `docker/Dockerfile` と `docker/compose.yml` を再利用します。
+作成後は ROS を source → rosdep → build の順で実行し、以後の bash ターミナルでは
+ROS とビルド済み overlay を自動で source します。Python / C++ / ROS 拡張を同梱設定しています。
+
+ディストリビューションは Compose と同じ `ROS_DISTRO` / `UBUNTU_CODENAME` の組で指定します。
+Jazzy / Noble で使う場合は VS Code を完全に終了してから次の環境で開き、Rebuild Container を選択します。
+
+```bash
+ROS_DISTRO=jazzy UBUNTU_CODENAME=noble code .
+```
+
+既定値は Lyrical / Resolute です。OS と ROS の組み合わせを片方だけ変更しないでください。
+GUI を使わない開発では追加のソケット共有は不要です。
+
+## GUI コンテナ
+
+Dockerfile に RViz2 / rqt とソフトウェア OpenGL を導入しています。
+以下の例は Linux X11 または XWayland です。ホストで DISPLAY と Xauthority を用意します。
+
+```bash
+export ROS_DISTRO=jazzy UBUNTU_CODENAME=noble
+export ROS2_XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}"
+test -f "$ROS2_XAUTHORITY"
+docker compose -f docker/compose.yml -f docker/compose.gui.yml build
+docker compose -f docker/compose.yml -f docker/compose.gui.yml run --rm ros2sample
+# コンテナ内
+bash scripts/rosdep-install.sh "$ROS_DISTRO"
+bash scripts/build.sh
+source install/setup.bash
+rviz2
+# RViz を終了後
+rqt
+```
+
+X11 ソケットと認証ファイルを読み取り専用で共有します。`xhost +` は必要ありません。
+No protocol specified が出る場合は実際の XAUTHORITY の位置と有効な cookie を確認します。
+Wayland セッションでは XWayland の DISPLAY / XAUTHORITY を使います。ネイティブ Wayland
+ソケットは共有しません。XWayland 未導入の環境では先にホストへ導入してください。
+既定は `LIBGL_ALWAYS_SOFTWARE=1` で GPU パススルーを要求しません。
+
+Dev Container に同じ GUI 設定を使う場合は dockerComposeFile 配列へ
+`../docker/compose.gui.yml` を追加し、上記環境変数を持つ新しい VS Code から再ビルドします。
+
+### macOS / XQuartz
+
+XQuartz を起動し、設定の Security でネットワーククライアントの接続を許可して再起動します。
+XQuartz のターミナルで `xhost +localhost` を実行してから次を使います。
+
+```bash
+ROS_DISTRO=jazzy UBUNTU_CODENAME=noble docker compose \
+  -f docker/compose.yml -f docker/compose.xquartz.yml run --rm ros2sample
+# コンテナでビルド後
+rviz2
+```
+
+接続先は `host.docker.internal:0` です。XQuartz の access control とホスト firewall を
+確認し、終了後は `xhost -localhost` で追加した許可を戻します。XQuartz の OpenGL 対応により
+RViz が動かない場合は、Foxglove をホストで開き、コンテナ内の bridge へ接続してください。
+Docker の Linux X11 ソケット共有は macOS には適用しません。
+
+### Foxglove のポート
+
+Compose は 8765 をホストの loopback に公開します。`docker compose run` は既定では
+ポートを公開しないため、Foxglove 用には `docker compose -f docker/compose.yml run --rm --service-ports ros2sample`
+を使ってください。Dev Container / `compose up` では ports 設定が適用されます。
+同じコンテナ内で bridge とシミュレータを起動します。

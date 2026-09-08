@@ -1,7 +1,7 @@
-"""Tests for the drone_sim.pid module."""
+"""Tests for the sample_utils.pid module."""
 
-from drone_sim.pid import PIDController
 import pytest
+from sample_utils.pid import PIDController
 
 
 def test_p_only_output():

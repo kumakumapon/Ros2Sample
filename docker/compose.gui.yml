@@ -1,0 +1,11 @@
+# Linux X11 / XWayland. Paths are relative to docker/compose.yml.
+services:
+  ros2sample:
+    environment:
+      DISPLAY: ${DISPLAY:?Set DISPLAY on the host}
+      XAUTHORITY: /tmp/ros2sample.xauth
+      QT_X11_NO_MITSHM: "1"
+      LIBGL_ALWAYS_SOFTWARE: ${LIBGL_ALWAYS_SOFTWARE:-1}
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:ro
+      - ${ROS2_XAUTHORITY:?Set ROS2_XAUTHORITY to your Xauthority file}:/tmp/ros2sample.xauth:ro

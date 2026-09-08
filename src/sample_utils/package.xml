@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>sample_utils</name>
+  <version>0.1.0</version>
+  <description>Shared simulation math and noise utilities.</description>
+  <maintainer email="dev@example.com">ROS 2 Sample Maintainers</maintainer>
+  <license>MIT</license>
+  <test_depend>python3-pytest</test_depend>
+  <test_depend>rclpy</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <export><build_type>ament_python</build_type></export>
+</package>

@@ -15,9 +15,12 @@ Checks:
    file or the package README (detects unwired "orphan" configs).
 3. Every executable registered in setup.py ``console_scripts`` is
    mentioned in the package README.
+4. Root README rows and links cover executables, packages and tutorials in
+   both languages; foundational English chapters and local entry links exist.
 """
 
 import ast
+import re
 import sys
 from pathlib import Path
 
@@ -135,6 +138,67 @@ def check_executables_documented(pkg_dirs, errors):
                     'パッケージ README で言及されていません')
 
 
+def check_root_inventory(pkg_dirs, errors):
+    """Check per-package executable rows and README links in both entry points."""
+    for filename in ('README.md', 'README.en.md'):
+        readme = REPO_ROOT / filename
+        if not readme.is_file():
+            errors.append(f'{filename}: missing root README')
+            continue
+        text = readme.read_text(encoding='utf-8')
+        for pkg in pkg_dirs:
+            if is_interface_only_package(pkg):
+                continue
+            suffix = 'README.en.md' if filename.endswith('.en.md') else 'README.md'
+            target = f'src/{pkg.name}/{suffix}'
+            if f']({target})' not in text:
+                errors.append(f'{filename}: missing package link {target}')
+            if not (pkg / suffix).is_file():
+                errors.append(f'{pkg.name}: missing {suffix}')
+            setup_py = pkg / 'setup.py'
+            if not setup_py.is_file():
+                continue
+            rows = [line for line in text.splitlines()
+                    if line.startswith(f'| `{pkg.name}` |')]
+            row = '\n'.join(rows)
+            for name in console_script_names(setup_py):
+                if f'`{name}`' not in row:
+                    errors.append(f'{filename}: {pkg.name} missing executable {name}')
+
+
+def check_tutorial_index(errors):
+    """Require every Japanese chapter in the root index and the English route."""
+    root = (REPO_ROOT / 'README.md').read_text(encoding='utf-8')
+    english_path = REPO_ROOT / 'docs/tutorials/en/00_learning_path.md'
+    if not english_path.is_file():
+        errors.append('Missing English learning path')
+        return
+    english = english_path.read_text(encoding='utf-8')
+    for chapter in sorted((REPO_ROOT / 'docs/tutorials').glob('[0-9][0-9]_*.md')):
+        if f'](docs/tutorials/{chapter.name})' not in root:
+            errors.append(f'README.md: missing tutorial {chapter.name}')
+        if chapter.name not in english:
+            errors.append(f'English learning path: missing tutorial {chapter.name}')
+        if int(chapter.name[:2]) <= 6:
+            if not (chapter.parent / 'en' / chapter.name).is_file():
+                errors.append(f'Missing foundational English chapter {chapter.name}')
+
+
+def check_entry_links(pkg_dirs, errors):
+    """Validate local Markdown links in the maintained entry-point documents."""
+    docs = list(REPO_ROOT.glob('README*.md'))
+    docs += list((REPO_ROOT / 'docs/tutorials/en').glob('*.md'))
+    for pkg in pkg_dirs:
+        docs += list(pkg.glob('README*.md'))
+    for doc in docs:
+        for target in re.findall(r'\]\(([^)]+)\)', doc.read_text(encoding='utf-8')):
+            if '://' in target or target.startswith(('#', 'mailto:')):
+                continue
+            path = target.split('#', 1)[0]
+            if path and not (doc.parent / path).exists():
+                errors.append(f'{doc.relative_to(REPO_ROOT)}: broken link {target}')
+
+
 def main():
     """Run all checks and return 1 when any drift is found."""
     pkg_dirs = find_packages()
@@ -145,6 +209,9 @@ def main():
     check_package_listed(pkg_dirs, errors)
     check_config_referenced(pkg_dirs, errors)
     check_executables_documented(pkg_dirs, errors)
+    check_root_inventory(pkg_dirs, errors)
+    check_tutorial_index(errors)
+    check_entry_links(pkg_dirs, errors)
     if errors:
         print('ドキュメントと実装の乖離が見つかりました:', file=sys.stderr)
         for error in errors:

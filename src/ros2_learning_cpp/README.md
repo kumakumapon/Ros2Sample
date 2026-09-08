@@ -1,5 +1,7 @@
 # ros2_learning_cpp
 
+[日本語](README.md) | [English](README.en.md)
+
 > [!WARNING]
 > 本パッケージは検証中であり、確実に動作確認したものではありません。詳細はリポジトリルートの README を参照してください。
 
@@ -21,7 +23,7 @@ ROS 2 の基礎概念（Publisher/Subscriber、Service、Action、パラメー�
 ```bash
 source /opt/ros/jazzy/setup.bash
 cd Ros2Sample
-colcon build --packages-select sample_interfaces ros2_learning_cpp
+colcon build --packages-up-to sample_interfaces ros2_learning_cpp
 source install/setup.bash
 ```
 

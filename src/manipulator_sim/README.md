@@ -1,5 +1,7 @@
 # manipulator_sim
 
+[日本語](README.md) | [English](README.en.md)
+
 > [!WARNING]
 > 本パッケージは検証中であり、確実に動作確認したものではありません。詳細はリポジトリルートの README を参照してください。
 
@@ -20,7 +22,7 @@ messages into the same `joint_target` interface.
 From the workspace root:
 
 ```bash
-colcon build --packages-select manipulator_sim
+colcon build --packages-up-to manipulator_sim
 source install/setup.bash
 ```
 

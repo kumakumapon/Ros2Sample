@@ -1,5 +1,7 @@
 # nav2_learning
 
+[日本語](README.md) | [English](README.en.md)
+
 > [!WARNING]
 > 本パッケージは検証中であり、確実に動作確認したものではありません。詳細はリポジトリルートの README を参照してください。
 
@@ -31,7 +33,7 @@ Nav2 を使わずに動作する独立した実装で、コストマップ・経
 ```bash
 source /opt/ros/jazzy/setup.bash
 cd Ros2Sample
-colcon build --packages-select nav2_learning
+colcon build --packages-up-to nav2_learning
 source install/setup.bash
 ```
 

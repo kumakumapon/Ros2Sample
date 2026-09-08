@@ -424,3 +424,23 @@ time sample があり、`usdchecker` が成功する。
 3. launch の namespace、remap、`use_sim_time` を確認する。
 4. 純粋関数は pytest、ROS graph は smoke test で確認する。
 5. 利用者から見える挙動は [simulation_spec.md](simulation_spec.md) と README も更新する。
+
+## センサーフュージョンの時刻・座標規約（#79 / #80）
+
+`noisy_sensor_node` の軌道時刻 t は起動時の ROS clock からの差です。
+`use_sim_time=true` で時計が未初期化（0）の場合は、最初の非ゼロ時刻を原点とします。
+時計の停止中は軌道も停止し、巻き戻し時には新しい時刻を原点に再開します。
+各発行コールバックは一度だけ時計を読み、軌道計算とメッセージ stamp に同じ時刻を使います。
+
+位置と姿勢は `world`、IMU 加速度は `base_link` の値です。
+機体は +X 前方・+Y 左・+Z 上で、yaw = ωt + π/2 と定義します。
+世界加速度を R(-yaw) で回転した後にノイズとバイアスを加えます。
+この規約で向心加速度は `(0, +Rω², 0)` です（#79 本文の負符号は採用しません）。
+重力を除去済みの運動加速度を扱う教材モデルであり、静止時に +9.81 m/s² を出す
+生の加速度計モデルではありません。
+`wheel_odom` と `ground_truth` の twist も child_frame_id の機体座標系へ回転します。
+既定の円軌道では前進速度は Rω = 1.5 m/s、横速度は 0 となり、EKF の速度モデルと一致します。
+
+PID とガウスノイズの単一実装は `sample_utils`、相補フィルタの数式は
+`sensor_fusion_sim.filter_math` に置きます。使用箇所のない dead reckoning / innovation /
+distance ヘルパーは削除し、相補フィルタのテストが実ノードの数式を保証します。

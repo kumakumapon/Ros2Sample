@@ -1,3 +1,5 @@
+"""Install the drone_sim package and its documentation."""
+
 from glob import glob
 from os.path import join
 
@@ -11,7 +13,7 @@ setup(
     packages=find_packages(exclude=['test']),
     data_files=[
         ('share/ament_index/resource_index/packages', [join('resource', package_name)]),
-        (join('share', package_name), ['package.xml', 'README.md']),
+        (join('share', package_name), ['package.xml', 'README.md', 'README.en.md']),
         (join('share', package_name, 'config'), glob(join('config', '*.yaml'))),
         (join('share', package_name, 'launch'), glob(join('launch', '*.launch.py'))),
         (join('share', package_name, 'rviz'), glob(join('rviz', '*.rviz'))),
@@ -38,6 +40,7 @@ setup(
             'sim_drone = drone_sim.sim_drone:main',
             'telemetry_logger = drone_sim.telemetry_logger:main',
             'waypoint_commander = drone_sim.waypoint_commander:main',
+            'visualization_markers = drone_sim.visualization_markers:main',
             'wind_disturbance = drone_sim.wind_disturbance:main',
         ],
     },

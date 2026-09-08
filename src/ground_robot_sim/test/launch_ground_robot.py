@@ -1,89 +1,57 @@
-"""Integration test using launch_testing for ground_robot_sim nodes."""
+"""Launch integration scenario; execute with launch_test after building."""
 
-import unittest
-
-import pytest
-
-try:
-    from launch import LaunchDescription
-    from launch_ros.actions import Node
-    import launch_testing
-    import launch_testing.actions
-    import rclpy
-    from rclpy.node import Node as RclpyNode
-    from sensor_msgs.msg import LaserScan
-    HAVE_LAUNCH_TESTING = True
-except ImportError:
-    HAVE_LAUNCH_TESTING = False
+from geometry_msgs.msg import Twist
+from launch import LaunchDescription
+from launch_ros.actions import Node
+import launch_testing.actions
+from nav_msgs.msg import Odometry
+from sample_utils.testing import RosTestCase
+from sensor_msgs.msg import LaserScan
+from std_srvs.srv import Trigger
 
 
-@pytest.mark.launch_test
 def generate_test_description():
-    """Generate launch description for integration testing."""
-    if not HAVE_LAUNCH_TESTING:
-        return LaunchDescription()
-
-    ground_robot_node = Node(
-        package='ground_robot_sim',
-        executable='ground_robot_node',
-        name='ground_robot',
-        parameters=[{'publish_rate': 30.0, 'scan_rate': 10.0}],
-    )
-
+    """Start the ground robot without a competing controller."""
     return LaunchDescription([
-        ground_robot_node,
+        Node(package='ground_robot_sim', executable='ground_robot_node',
+             namespace='test_ground', parameters=[{'publish_rate': 30.0, 'scan_rate': 10.0}]),
         launch_testing.actions.ReadyToTest(),
     ])
 
 
-class TestGroundRobotLaunch(unittest.TestCase):
-    """Integration test checking node startup and topic publishing."""
+class TestGroundRobot(RosTestCase):
+    """Validate scans and the stop/reset service behavior under continued commands."""
 
-    @classmethod
-    def setUpClass(cls):
-        if not HAVE_LAUNCH_TESTING:
-            return
-        rclpy.init()
+    namespace = 'test_ground'
 
-    @classmethod
-    def tearDownClass(cls):
-        if not HAVE_LAUNCH_TESTING:
-            return
-        rclpy.shutdown()
-
-    def setUp(self):
-        if not HAVE_LAUNCH_TESTING:
-            self.skipTest('launch_testing or ROS 2 dependencies not available')
-        self.node = RclpyNode('test_ground_robot_client')
-
-    def tearDown(self):
-        if hasattr(self, 'node'):
-            self.node.destroy_node()
-
-    def test_scan_topic_published(self):
-        """Verify that ground_robot publishes valid LaserScan messages."""
-        received_msgs = []
-
-        sub = self.node.create_subscription(
-            LaserScan,
-            'scan',
-            lambda msg: received_msgs.append(msg),
-            10,
-        )
-
-        # Spin briefly to receive messages
-        start_time = self.node.get_clock().now()
-        while len(received_msgs) < 3:
-            rclpy.spin_once(self.node, timeout_sec=0.1)
-            elapsed = (self.node.get_clock().now() - start_time).nanoseconds * 1e-9
-            if elapsed > 5.0:
-                break
-
-        self.node.destroy_subscription(sub)
-        self.assertGreaterEqual(
-            len(received_msgs),
-            1,
-            'Failed to receive scan messages within timeout',
-        )
-        first_scan = received_msgs[0]
-        self.assertGreater(len(first_scan.ranges), 0)
+    def test_scan_and_emergency_stop(self):
+        """Stop must latch, ignore commands, and allow movement after reset."""
+        scans = self.receive(LaserScan, 'scan')
+        odom = self.receive(Odometry, 'odom')
+        self.wait_until(lambda: len(scans) >= 3 and len(odom) >= 3)
+        self.assertEqual(len(scans[-1].ranges), 181)
+        self.assertEqual(scans[-1].header.frame_id, 'base_scan')
+        self.assertGreater(scans[-1].range_max, scans[-1].range_min)
+        publisher = self.node.create_publisher(Twist, 'cmd_vel', 10)
+        self.wait_until(lambda: publisher.get_subscription_count() > 0)
+        command = Twist()
+        command.linear.x = 0.3
+        timer = self.node.create_timer(0.05, lambda: publisher.publish(command))
+        self.addCleanup(self.node.destroy_timer, timer)
+        start_x = odom[-1].pose.pose.position.x
+        self.wait_until(lambda: odom[-1].pose.pose.position.x > start_x + 0.1)
+        stop = self.node.create_client(Trigger, 'emergency_stop')
+        reset = self.node.create_client(Trigger, 'reset_emergency')
+        self.assertTrue(stop.wait_for_service(timeout_sec=10.0))
+        self.assertTrue(reset.wait_for_service(timeout_sec=10.0))
+        self.assertTrue(self.result(stop.call_async(Trigger.Request())).success)
+        self.spin_for(0.3)
+        stopped_x = odom[-1].pose.pose.position.x
+        odom.clear()
+        self.spin_for(0.5)
+        self.assertGreater(len(odom), 3)
+        for msg in odom:
+            self.assertAlmostEqual(msg.pose.pose.position.x, stopped_x, places=5)
+            self.assertAlmostEqual(msg.twist.twist.linear.x, 0.0, places=5)
+        self.assertTrue(self.result(reset.call_async(Trigger.Request())).success)
+        self.wait_until(lambda: odom[-1].pose.pose.position.x > stopped_x + 0.1)

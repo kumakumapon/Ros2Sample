@@ -3,10 +3,7 @@
 import math
 from typing import Tuple
 
-
-def normalize_angle(angle: float) -> float:
-    """Wrap angle to [-pi, pi]."""
-    return math.atan2(math.sin(angle), math.cos(angle))
+from sample_utils.angles import normalize_angle  # noqa: F401
 
 
 def yaw_to_quaternion(yaw: float) -> Tuple[float, float, float, float]:

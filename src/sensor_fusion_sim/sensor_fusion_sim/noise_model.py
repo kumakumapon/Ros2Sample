@@ -3,17 +3,7 @@
 import random
 from typing import Optional, Tuple
 
-
-def add_gaussian_noise(
-    value: float,
-    stddev: float,
-    rng: Optional[random.Random] = None,
-) -> float:
-    """Return value with additive Gaussian noise, or unchanged if stddev <= 0."""
-    if stddev <= 0.0:
-        return value
-    generator = rng if rng is not None else random
-    return value + generator.gauss(0.0, stddev)
+from sample_utils.noise import add_gaussian_noise  # noqa: F401
 
 
 def add_gaussian_noise_3d(

@@ -21,22 +21,11 @@
       ],
       "settings": {
         "python.defaultInterpreterPath": "/usr/bin/python3",
-        "python.analysis.extraPaths": [
-          "/opt/ros/jazzy/lib/python3.12/site-packages",
-          "/opt/ros/lyrical/lib/python3.12/site-packages",
-          "/workspace/Ros2Sample/install/ground_robot_sim/lib/python3.12/site-packages",
-          "/workspace/Ros2Sample/install/drone_sim/lib/python3.12/site-packages",
-          "/workspace/Ros2Sample/install/manipulator_sim/lib/python3.12/site-packages",
-          "/workspace/Ros2Sample/install/sensor_fusion_sim/lib/python3.12/site-packages",
-          "/workspace/Ros2Sample/install/nav2_learning/lib/python3.12/site-packages",
-          "/workspace/Ros2Sample/install/openusd_bridge/lib/python3.12/site-packages",
-          "/workspace/Ros2Sample/install/ros2_learning/lib/python3.12/site-packages",
-          "/workspace/Ros2Sample/install/sample_interfaces/lib/python3.12/site-packages"
-        ],
         "terminal.integrated.defaultProfile.linux": "bash"
       }
     }
   },
-  "postCreateCommand": "bash -c 'rosdep init || true && rosdep update && ./scripts/rosdep-install.sh ${ROS_DISTRO:-jazzy} && ./scripts/build.sh'",
-  "remoteUser": "root"
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "remoteUser": "root",
+  "shutdownAction": "stopCompose"
 }
