@@ -13,6 +13,16 @@ from sensor_msgs.msg import Imu
 from std_msgs.msg import String
 
 
+def _diagnostic_counts(data):
+    """Extract integer input counters from a filter diagnostic message."""
+    counts = {}
+    for key in ('gps', 'imu', 'odom'):
+        match = re.search(rf'\b{key}=(\d+)\b', data)
+        if match:
+            counts[key] = int(match.group(1))
+    return counts
+
+
 def generate_test_description():
     """Launch the real noisy-sensor to complementary-filter pipeline."""
     return LaunchDescription([
@@ -42,8 +52,9 @@ class TestFusion(RosTestCase):
         def consumed():
             if not diagnostics:
                 return False
-            counts = dict(re.findall(r'(gps|imu|odom)=(\d+)', diagnostics[-1].data))
-            return all(int(counts.get(key, 0)) >= 2 for key in ('gps', 'imu', 'odom'))
+            counts = _diagnostic_counts(diagnostics[-1].data)
+            return all(counts.get(key, 0) >= 2
+                       for key in ('gps', 'imu', 'odom'))
 
         self.wait_until(
             lambda: len(fused) > 5 and imu and wheel,
@@ -56,7 +67,7 @@ class TestFusion(RosTestCase):
             self.fail(
                 'Filter diagnostics did not report all inputs: '
                 f'fused={len(fused)}, imu={len(imu)}, wheel={len(wheel)}, '
-                f'latest={latest!r}'
+                f'counts={_diagnostic_counts(latest)}, latest={latest!r}'
             )
         self.assertEqual(fused[-1].header.frame_id, 'world')
         self.assertEqual(fused[-1].child_frame_id, 'base_link_fused')
