@@ -16,6 +16,7 @@
 | `sensor_fusion_sim` | ノイズ付きセンサー、相補フィルタ、EKF によるセンサーフュージョン、ライフサイクルノード、QoS、コールバックグループ | センサーフュージョン |
 | `nav2_learning` | OccupancyGrid マップ配信、A* 経路計画、Pure Pursuit 経路追従、Nav2 waypoint action クライアント、コストマップ監視、log-odds 占有格子地図マッピング | Navigation2 の概念（Nav2 なし） |
 | `openusd_bridge` | `Odometry` の pose を OpenUSD stage の時系列 `Xform` として記録 | ロボット軌跡の USD 可視化・交換 |
+| `rai_bridge` | 自然言語テキスト指令をルールベースで解析し `cmd_vel` へ変換。`langchain-core` があれば同じツール関数を LangChain agent 用にラップ | RAI 風の自然言語ロボット操作 |
 | `sample_interfaces` | サンプル共通の msg / srv / action 定義 | 状態取得と waypoint action |
 
 ### 1.2 設計方針
@@ -388,9 +389,35 @@ OpenUSD Python bindings (`pxr`) は重いオプション依存のため `rosdep`
 | --- | --- | --- |
 | `ground_robot_openusd.launch.py` | `ground_robot_node`、`diff_drive_patrol`、`odom_to_usd` | 巡回する地上ロボットの pose を OpenUSD animation として保存 |
 
-## 10. 実行・観測手順
+## 10. RAI 自然言語ブリッジ仕様
 
-### 10.1 ビルド
+`rai_bridge` は `nl_command` (`std_msgs/String`) を購読し、ルールベースの
+パーサー（`nl_command_parser.parse_command`）で日本語・英語混在の自由文から
+action（`move_forward` / `move_backward` / `rotate_left` / `rotate_right` /
+`stop` / `unknown`）と距離 [m] または角度 [deg] を抽出します。認識結果は
+`robot_tools` の関数で `cmd_vel` (`Twist`) の open-loop フェーズへ変換され、
+`diff_drive_patrol` と同様に一定時間 Twist を publish し続けてから停止します。
+認識結果（または未認識だった原文）は `nl_command_status` (`std_msgs/String`)
+へ publish されます。
+
+これは [RobotecAI の RAI](https://github.com/RobotecAI/rai) が採用する、
+「ROS 2 の能力を型付きの小さな関数（ツール）として LLM エージェントに公開する」
+という構成を、LLM もネットワークアクセスも使わずに体験するための最小実装です。
+`langchain-core` が導入されていれば、`rai_agent_adapter.build_rai_tools()` が
+`robot_tools` の関数をそのまま LangChain の `Tool` としてラップします。
+`langchain-core` は `openusd_bridge` の `pxr` と同様、`rosdep` では導入しない
+オプション依存であり、未導入でも workspace の build/test と
+`nl_teleop_demo.launch.py` によるルールベース実行は変わらず動作します。
+
+| launch | 主な起動ノード | シナリオ |
+| --- | --- | --- |
+| `nl_teleop_demo.launch.py` | `ground_robot_node`、`nl_command_node`、`nl_demo_publisher` | スクリプト済み自然言語コマンドで地上ロボットを前進・旋回・停止させる |
+
+詳細は [`src/rai_bridge/README.md`](../src/rai_bridge/README.md) を参照してください。
+
+## 11. 実行・観測手順
+
+### 11.1 ビルド
 
 ```bash
 source /opt/ros/<rosdistro>/setup.bash
@@ -398,7 +425,7 @@ colcon build --symlink-install
 source install/setup.bash
 ```
 
-### 10.2 代表デモの起動
+### 11.2 代表デモの起動
 
 ```bash
 # 地上ロボット
@@ -423,12 +450,15 @@ ros2 launch sensor_fusion_sim sensor_fusion_demo.launch.py
 # OpenUSD 記録（別途 pxr が必要）
 ros2 launch openusd_bridge ground_robot_openusd.launch.py
 
+# RAI 風の自然言語ブリッジ
+ros2 launch rai_bridge nl_teleop_demo.launch.py
+
 # Navigation2 学習パッケージ
 ros2 launch nav2_learning simple_planning_demo.launch.py
 ros2 launch nav2_learning occupancy_mapping_demo.launch.py
 ```
 
-### 10.3 topic / service の確認例
+### 11.3 topic / service の確認例
 
 ```bash
 ros2 topic list
@@ -445,6 +475,7 @@ ros2 topic echo /ekf_diagnostics
 ros2 topic echo /recording_status
 ros2 topic echo /map
 ros2 topic echo /plan
+ros2 topic echo /nl_command_status
 ros2 service call /get_robot_status sample_interfaces/srv/GetRobotStatus
 ros2 service call /emergency_stop std_srvs/srv/Trigger
 ros2 service call /reset_emergency std_srvs/srv/Trigger
@@ -458,7 +489,7 @@ ros2 topic echo /drone_1/pose
 ros2 service call /drone_1/get_robot_status sample_interfaces/srv/GetRobotStatus
 ```
 
-## 11. 仕様変更時の更新ポイント
+## 12. 仕様変更時の更新ポイント
 
 - 新しいノード、topic、service、action を追加したら、この文書の該当表を更新してください。
 - launch ファイルや config YAML の既定値を変更した場合は、シナリオ表とパラメータ表を更新してください。

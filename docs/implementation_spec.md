@@ -59,6 +59,12 @@ flowchart LR
     ODOM["Odometry publisher"] -->|odom| REC["odom_to_usd"]
     REC -->|time-sampled Xform| STAGE["OpenUSD stage"]
   end
+
+  subgraph RAI["rai_bridge"]
+    DEMO["nl_demo_publisher"] -->|nl_command| NLC["nl_command_node"]
+    NLC -->|cmd_vel| GS
+    NLC --> NLOUT["nl_command_status"]
+  end
 ```
 
 複数ノードが同じ `cmd_vel` に publish する構成では、最後に受信した値がシミュレータの指令になります。優先度調停や command mux は実装していないため、通常は1つの制御ノードだけを接続します。
@@ -327,7 +333,58 @@ stage は指定 sample 数ごと、および正常 shutdown 時に root layer �
 | `time_codes_per_second` | `30.0` | 正の有限値 |
 | `save_every_n_samples` | `30` | 最小 1 |
 
-## 9. namespace と TF
+## 9. RAI 自然言語ブリッジ
+
+### 9.1 ノード契約
+
+| 実行ファイル（ノード名） | Subscribe | Publish | 役割 |
+| --- | --- | --- | --- |
+| `nl_command_node` | `input_topic: String` (既定 `nl_command`) | `cmd_vel: Twist`、`nl_command_status: String` | テキストを action + 数値へパースし、open-loop Twist フェーズへ変換 |
+| `nl_demo_publisher` | なし | `output_topic: String` (既定 `nl_command`) | `commands` parameter のスクリプトを `interval_sec` ごとに順送り publish |
+
+`nl_command_parser.parse_command(text)` は純粋関数で、`STOP_KEYWORDS` /
+`LEFT_KEYWORDS` / `RIGHT_KEYWORDS` / `BACKWARD_KEYWORDS` / `FORWARD_KEYWORDS`
+の順に部分一致を確認し、最初に一致した action を返します（この優先順位により
+「左」「右」が「進んで」より先に判定されます）。距離は
+`(\d+(?:\.\d+)?)\s*(?:メートル|メーター|meters?|m)`、角度は
+`(\d+(?:\.\d+)?)\s*(?:度|deg(?:rees?)?)` の正規表現で抽出し、
+一致しない場合は `default_distance_m` / `default_angle_deg` を使います。
+いずれのキーワードにも一致しない場合は action `unknown` を返し、原文をそのまま
+`nl_command_status` に報告します（ノードは停止せず継続動作します）。
+
+`robot_tools.twist_values_for_command` が action を `(linear_x, angular_z)`
+の単位 Twist へ変換し、`robot_tools.command_duration_sec` が
+`distance / linear_speed`（移動）または `radians(angle) / angular_speed`
+（回転）で保持時間を計算します。`nl_command_node` はこの時間だけ Twist を
+publish し続け、経過後は zero Twist を publish して `nl_command_status` を
+`idle` に戻します。新しいテキストを受信すると、進行中のフェーズを打ち切って
+即座に新しいフェーズへ切り替えます（`diff_drive_patrol` の状態機械と同様、
+複数フェーズのキューイングはしません）。
+
+| parameter (`nl_command_node`) | default | 制約・意味 |
+| --- | --- | --- |
+| `input_topic` | `nl_command` | 購読するテキスト指令 topic |
+| `linear_speed` | `0.3` | `move_forward` / `move_backward` の `linear.x` [m/s] |
+| `angular_speed` | `0.6` | `rotate_left` / `rotate_right` の `angular.z` [rad/s] |
+| `publish_rate` | `20.0` | `cmd_vel` の publish 周期 [Hz]。最小 1 Hz へ補正 |
+| `default_distance_m` | `1.0` | 距離未指定時に使う既定距離 [m] |
+| `default_angle_deg` | `90.0` | 角度未指定時に使う既定角度 [deg] |
+
+| parameter (`nl_demo_publisher`) | default | 制約・意味 |
+| --- | --- | --- |
+| `output_topic` | `nl_command` | publish 先 topic |
+| `commands` | 前進・旋回・停止のスクリプト | 順に送信する文字列配列。空の場合は既定スクリプトへ復帰 |
+| `interval_sec` | `4.0` | 各指令の送信間隔 [秒]。最小 0.1 秒へ補正 |
+| `loop` | `true` | スクリプトを繰り返すか |
+
+`rai_agent_adapter.py` は `langchain_core.tools.tool` で `robot_tools` の関数群を
+LangChain の `Tool` としてラップするオプション拡張です。`langchain-core` は
+`rosdep` の対象に含めないオプション依存（`pxr` と同じ扱い）で、未導入の場合
+`build_rai_tools()` は `RaiAgentUnavailableError` を送出し、`nl_command_node`
+自体はルールベースの `parse_command` だけで動作を続けます。この adapter は
+ROS 2 ノードの実行経路からは呼び出さない、参照実装・単体テスト用のモジュールです。
+
+## 10. namespace と TF
 
 - 地上ロボット複数台: topic/service は launch namespace、TF は `frame_prefix` で分離。
 - swarm: topic は `/drone_N/*`、child frame は `drone_N/base_link`。
@@ -335,7 +392,7 @@ stage は指定 sample 数ごと、および正常 shutdown 時に root layer �
 - マニピュレータ: 単体起動前提。複数台では frame parameter と namespace の両方を変更する。
 - TF timestamp と message timestamp は同じ ROS clock から取得する。
 
-## 10. 失敗モードと制約
+## 11. 失敗モードと制約
 
 | 条件 | 現在の挙動 | 利用側の対策 |
 | --- | --- | --- |
@@ -347,10 +404,12 @@ stage は指定 sample 数ごと、および正常 shutdown 時に root layer �
 | `use_sim_time=true` で `/clock` なし | timer が進行しない | clock publisher を起動するか false を使う |
 | OpenUSD bindings (`pxr`) 未導入 | `odom_to_usd` 起動時に説明付きエラー | ROS 2 と同じ Python 環境へ OpenUSD を導入 |
 | USD 保存先が不正、または書込不可 | stage 作成・保存時に起動失敗 | 対応拡張子と書込可能な directory を指定 |
+| `nl_command` が未認識テキスト | action `unknown` を `nl_command_status` へ報告し、ロボットは停止したまま | キーワード表と正規表現を README で確認し、対応する言い回しに修正する |
+| `langchain-core` 未導入で `build_rai_tools()` を呼ぶ | `RaiAgentUnavailableError` を送出。`nl_command_node` はルールベースのまま動作継続 | `pip install langchain-core` を導入するか、rule-based parser のみを使う |
 
-## 11. 受け入れ確認
+## 12. 受け入れ確認
 
-### 11.1 静的・単体確認
+### 12.1 静的・単体確認
 
 ```bash
 ./scripts/lint.sh
@@ -359,7 +418,7 @@ colcon test --event-handlers console_direct+
 colcon test-result --verbose
 ```
 
-### 11.2 地上ロボット smoke test
+### 12.2 地上ロボット smoke test
 
 ```bash
 ros2 launch ground_robot_sim waypoint_follower.launch.py
@@ -371,7 +430,7 @@ ros2 service call /reset_emergency std_srvs/srv/Trigger
 
 期待結果: `odom` が約30 Hz、status が `moving` または `idle`、非常停止中は位置が変化しない。
 
-### 11.3 ドローン smoke test
+### 12.3 ドローン smoke test
 
 ```bash
 ros2 launch drone_sim single_quad_waypoint.launch.py
@@ -382,7 +441,7 @@ ros2 service call /get_robot_status sample_interfaces/srv/GetRobotStatus
 
 期待結果: waypoint に向けて3D位置が変化し、status service が成功する。
 
-### 11.4 マニピュレータ smoke test
+### 12.4 マニピュレータ smoke test
 
 ```bash
 ros2 launch manipulator_sim planar_reach_demo.launch.py
@@ -393,7 +452,7 @@ ros2 run tf2_ros tf2_echo base_link tool0
 
 期待結果: 2関節の状態、手先 pose、連続した TF が取得できる。
 
-### 11.5 センサーフュージョン smoke test
+### 12.5 センサーフュージョン smoke test
 
 ```bash
 ros2 launch sensor_fusion_sim sensor_fusion_demo.launch.py
@@ -407,7 +466,7 @@ ros2 topic echo /ekf_diagnostics --once
 
 期待結果: `fused_odom` と `ekf_odom` がいずれも約 20 Hz で発行され、`ground_truth` との比較でそれぞれのフィルタの効果を確認できる。`ekf_odom` の `pose.covariance` / `twist.covariance` が非ゼロであること。`recording_status` が `active` で記録中であること。
 
-### 11.6 OpenUSD smoke test
+### 12.6 OpenUSD smoke test
 
 ```bash
 ros2 launch openusd_bridge ground_robot_openusd.launch.py
@@ -417,7 +476,22 @@ usdchecker /tmp/ros2_openusd/robot_motion.usda
 期待結果: 終了時に stage が保存され、`/World/Robot` の translate と orient に複数の
 time sample があり、`usdchecker` が成功する。
 
-## 12. 変更時チェックリスト
+### 12.7 RAI 自然言語ブリッジ smoke test
+
+```bash
+ros2 launch rai_bridge nl_teleop_demo.launch.py
+ros2 topic echo /nl_command_status --once
+ros2 topic hz /cmd_vel
+ros2 topic pub -1 /nl_command std_msgs/msg/String "data: '止まって'"
+ros2 topic echo /nl_command_status --once
+```
+
+期待結果: `nl_demo_publisher` のスクリプトに応じて `nl_command_status` が
+`move_forward(...)` / `rotate_right(...)` などへ変化し、`cmd_vel` が約 20 Hz で
+発行される。手動で「止まって」を publish すると `nl_command_status` が
+`stop` に切り替わり、`/odom` の位置が変化しなくなる。
+
+## 13. 変更時チェックリスト
 
 1. `declare_parameter` と `config/*.yaml` の default/上書きを更新する。
 2. topic、service、action、TF の型と方向を本書へ反映する。

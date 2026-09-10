@@ -1,0 +1,21 @@
+nl_command_node:
+  ros__parameters:
+    input_topic: nl_command
+    linear_speed: 0.3
+    angular_speed: 0.6
+    publish_rate: 20.0
+    default_distance_m: 1.0
+    default_angle_deg: 90.0
+
+nl_demo_publisher:
+  ros__parameters:
+    output_topic: nl_command
+    interval_sec: 4.0
+    loop: true
+    commands:
+      - "前進して"
+      - "2メートル進んで"
+      - "右に曲がって"
+      - "1メートル進んで"
+      - "左に90度回転して"
+      - "止まって"

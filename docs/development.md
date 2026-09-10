@@ -37,6 +37,7 @@ colcon test-result --verbose
 | `manipulator_sim` | 2自由度平面マニピュレータ向けの軽量 ROS 2 Python サンプルです。 |
 | `sensor_fusion_sim` | ノイズ付きセンサー、相補フィルタ、ライフサイクルノードの軽量 ROS 2 Python サンプルです。QoS プロファイル、コールバックグループ、動的パラメータ更新を含みます。 |
 | `sample_interfaces` | 共通 msg / srv / action 定義を収録する ament_cmake パッケージです。 |
+| `rai_bridge` | 自然言語テキスト指令をルールベースで解析し `cmd_vel` へ変換する、RAI 風の軽量 ROS 2 Python サンプルです。`langchain-core` があれば LangChain ツール化する拡張ポイントも含みます。 |
 
 ## パッケージ追加時のチェックリスト
 
