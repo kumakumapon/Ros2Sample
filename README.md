@@ -50,6 +50,7 @@
 | `ros2_learning_cpp` | `ros2_learning` と同じ題材を rclcpp（C++）で書き比べる学習パッケージ。Publisher/Subscriber、Service、Action、カスタムインターフェースの最小構成サンプル | `minimal_publisher`, `minimal_subscriber`, `minimal_service_server`, `minimal_service_client`, `minimal_action_server`, `minimal_action_client`, `custom_interface_demo` |
 | `nav2_learning` | Navigation2 の概念を Nav2 を使わずに段階的に学ぶ学習パッケージ。OccupancyGrid マップ配信、A* 経路計画、Pure Pursuit 経路追従、Nav2 waypoint action クライアント、コストマップ監視、log-odds によるオンライン占有格子地図マッピング（SLAM入門）の軽量サンプル | `simple_map_publisher`, `simple_path_planner`, `simple_path_follower`, `nav2_waypoint_client`, `costmap_monitor`, `simple_occupancy_mapper` |
 | `openusd_bridge` | `Odometry` の位置・姿勢を OpenUSD stage の時系列 `Xform` として保存するオプション連携サンプル | `odom_to_usd` |
+| `rai_bridge` | 自然言語テキスト指令をルールベースで解析し `cmd_vel` へ変換する、[RobotecAI の RAI](https://github.com/RobotecAI/rai) 風の最小サンプル。`langchain-core` があれば同じツール関数を LangChain agent 用にラップする拡張ポイントも収録 | `nl_command_node`, `nl_demo_publisher` |
 | `sample_utils` | PID・ガウスノイズ・角度正規化の共通ライブラリ | ライブラリ（実行ファイルなし） |
 | `sample_interfaces` | カスタム msg / srv / action 定義（ROS 2 インターフェース定義の学習用） | _(ライブラリパッケージ：実行ファイルなし)_ |
 
@@ -69,6 +70,7 @@
 | [`ros2_learning_cpp`](src/ros2_learning_cpp/README.md) | `ros2_learning` と同じ題材を rclcpp（C++）で学ぶチュートリアルパッケージ。rclpy ↔ rclcpp 対応表を収録 |
 | [`nav2_learning`](src/nav2_learning/README.md) | Navigation2 の概念（マップ、コストマップ、A* 経路計画、Pure Pursuit 経路追従、占有格子地図マッピング）を Nav2 なしで学ぶ学習パッケージ |
 | [`openusd_bridge`](src/openusd_bridge/README.md) | ROS 2 の odometry を OpenUSD の時系列 transform へ記録するサンプル |
+| [`rai_bridge`](src/rai_bridge/README.md) | 自然言語テキスト指令を `cmd_vel` へ変換する RAI 風ブリッジと、LangChain ツール化の拡張ポイント |
 | [`docs/simulation_spec.md`](docs/simulation_spec.md) | 全サンプル共通の観測ポイント、topic / service / action、代表デモの詳細仕様 |
 
 ## 依存関係
@@ -245,6 +247,12 @@ ros2 run nav2_learning simple_path_planner
 ros2 run nav2_learning simple_path_follower
 ros2 run nav2_learning simple_occupancy_mapper
 
+# 自然言語テキスト指令を cmd_vel へ変換するブリッジ
+ros2 run rai_bridge nl_command_node
+
+# スクリプト済み自然言語コマンドを配信するデモ publisher
+ros2 run rai_bridge nl_demo_publisher
+
 # 地上ロボットの緊急停止サービス呼び出し例
 ros2 service call /emergency_stop std_srvs/srv/Trigger
 ros2 service call /reset_emergency std_srvs/srv/Trigger
@@ -296,6 +304,9 @@ ros2 launch nav2_learning occupancy_mapping_demo.launch.py
 
 # OpenUSD: 地上ロボット odometry を USD stage へ記録（別途 pxr が必要）
 ros2 launch openusd_bridge ground_robot_openusd.launch.py
+
+# RAI 風ブリッジ: 自然言語スクリプトで地上ロボットを動かすデモ
+ros2 launch rai_bridge nl_teleop_demo.launch.py
 
 # チュートリアル: Publisher/Subscriber デモ
 ros2 launch ros2_learning pubsub_demo.launch.py
@@ -483,12 +494,13 @@ source /opt/ros/rolling/setup.bash
 
 Ros2Sample is a ROS 2 workspace for robot and drone examples. Documentation and tooling are Japanese-first, with Ubuntu 20.04 / 24.04 / 26.04 and ROS 2 Foxy / Lyrical / Jazzy / Kilted / Rolling in mind. The default and CI-primary distribution is Lyrical Luth (May 2026 LTS). Use `scripts/build.sh`, `scripts/lint.sh`, and `scripts/rosdep-install.sh` for common development tasks.
 
-Packages include `ground_robot_sim` (diff-drive robot with synthetic LiDAR, PID waypoint following, action server, obstacle avoidance, emergency stop service), `drone_sim` (quadrotor with PID altitude hold, wind disturbance, geofence monitoring, formation control, collision avoidance, telemetry logging, battery monitoring, emergency landing, FSM/BT mission nodes), `manipulator_sim` (2-DOF planar manipulator, kinematics, IK, MoveIt2 bridge), `sensor_fusion_sim` (noisy sensors, complementary filter and EKF fusion, lifecycle node with QoS profiles and callback groups), `nav2_learning` (Nav2 concepts from scratch: map publishing, A* path planning, Pure Pursuit tracking, occupancy grid mapping), `openusd_bridge` (recording ROS 2 odometry as time-sampled OpenUSD stages), `sample_interfaces` (custom msg/srv/action definitions for learning ROS 2 interface design), and `ros2_learning` (step-by-step tutorial package covering Publisher/Subscriber, Service, Action, Parameters, TF, and Lifecycle nodes with progressive tutorials in `docs/tutorials/`). `ros2_learning_cpp` is the rclcpp (C++) counterpart of `ros2_learning`, covering the same topics side by side with a rclpy-to-rclcpp mapping table.
+Packages include `ground_robot_sim` (diff-drive robot with synthetic LiDAR, PID waypoint following, action server, obstacle avoidance, emergency stop service), `drone_sim` (quadrotor with PID altitude hold, wind disturbance, geofence monitoring, formation control, collision avoidance, telemetry logging, battery monitoring, emergency landing, FSM/BT mission nodes), `manipulator_sim` (2-DOF planar manipulator, kinematics, IK, MoveIt2 bridge), `sensor_fusion_sim` (noisy sensors, complementary filter and EKF fusion, lifecycle node with QoS profiles and callback groups), `nav2_learning` (Nav2 concepts from scratch: map publishing, A* path planning, Pure Pursuit tracking, occupancy grid mapping), `openusd_bridge` (recording ROS 2 odometry as time-sampled OpenUSD stages), `rai_bridge` (rule-based natural-language-to-Twist bridge in the spirit of RobotecAI's RAI, with an optional LangChain tool-wrapping extension point), `sample_interfaces` (custom msg/srv/action definitions for learning ROS 2 interface design), and `ros2_learning` (step-by-step tutorial package covering Publisher/Subscriber, Service, Action, Parameters, TF, and Lifecycle nodes with progressive tutorials in `docs/tutorials/`). `ros2_learning_cpp` is the rclcpp (C++) counterpart of `ros2_learning`, covering the same topics side by side with a rclpy-to-rclcpp mapping table.
 
 ## 開発・可視化の追加ガイド
 
 - [sample_utils 共通ライブラリ](src/sample_utils/README.md)
 - [24 Foxglove・Marker 可視化](docs/tutorials/24_foxglove_visualization.md)
+- [25 自然言語で ROS 2 ロボットを動かす（RAI 風ブリッジ）](docs/tutorials/25_rai_natural_language_bridge.md)
 - [Dev Container / X11 / Wayland / XQuartz](docs/development.md#gui-コンテナ)
 - [英語の学習パスと基礎章](docs/tutorials/en/00_learning_path.md)
 

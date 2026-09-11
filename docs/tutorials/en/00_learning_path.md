@@ -26,7 +26,7 @@ The [development guide](../../development.md) covers Docker and GUI forwarding.
 
 Start with topics → services/actions → launch/parameters → TF → custom interfaces → lifecycle/QoS.
 For ground navigation continue through 07–10; for mission logic use 11; for visualization and
-debugging use 12–13. Read source with 14, then combine concepts in 15. Chapters 17–24 cover
+debugging use 12–13. Read source with 14, then combine concepts in 15. Chapters 17–25 cover
 optional integrations and tooling. No physical robot is required for the lightweight demos.
 
 | Chapter | Topic | Language |
@@ -56,6 +56,7 @@ optional integrations and tooling. No physical robot is required for the lightwe
 | [22](../22_moveit2_manipulator_planning.md) | MoveIt2 planning | Japanese |
 | [23](../23_openusd_recording.md) | OpenUSD recording | Japanese |
 | [24](../24_foxglove_visualization.md) | Foxglove and markers | Japanese |
+| [25](../25_rai_natural_language_bridge.md) | Natural-language robot control (RAI-style bridge) | Japanese |
 
 ## Check your understanding
 

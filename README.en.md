@@ -47,7 +47,7 @@ The primary language of this repository is **Japanese**, but this English docume
 
 ## Packages Overview
 
-The workspace contains 10 ROS 2 packages:
+The workspace contains 11 ROS 2 packages:
 
 | Package | Description | Key Executables |
 | --- | --- | --- |
@@ -57,6 +57,7 @@ The workspace contains 10 ROS 2 packages:
 | `sensor_fusion_sim` | Sensor fusion with noisy GPS, IMU, and wheel odometry using a complementary filter and Extended Kalman Filter (EKF). Features lifecycle nodes, QoS profiles, callback groups, dynamic parameter tuning, and pure math/transform utilities. | `noisy_sensor_node`, `complementary_filter_node`, `ekf_node`, `lifecycle_data_recorder` |
 | `nav2_learning` | Nav2 concepts implemented from scratch without Nav2 dependencies: OccupancyGrid map publishing, A* path planning with line-of-sight shortcutting & smoothing, Pure Pursuit path tracking, dynamic obstacle replanning, and online log-odds occupancy mapping (SLAM fundamentals). | `simple_map_publisher`, `simple_path_planner`, `simple_path_follower`, `nav2_waypoint_client`, `costmap_monitor`, `simple_occupancy_mapper` |
 | `openusd_bridge` | Records ROS 2 `Odometry` messages as time-sampled OpenUSD animation stages (`.usd`, `.usda`, `.usdc`) for scene visualization and exchange. | `odom_to_usd` |
+| `rai_bridge` | Rule-based natural-language-to-`cmd_vel` bridge in the spirit of [RobotecAI's RAI](https://github.com/RobotecAI/rai), with an optional LangChain tool-wrapping extension point (no network access or LLM API key required). | `nl_command_node`, `nl_demo_publisher` |
 | `ros2_learning` | Progressive ROS 2 tutorial package (Python/rclpy) covering Pub/Sub, Service, Action, Parameters, TF2, and Lifecycle nodes. | `minimal_publisher`, `minimal_subscriber`, `minimal_service_server`, `minimal_service_client`, `minimal_action_server`, `minimal_action_client`, `parameter_demo`, `tf_broadcaster_demo`, `tf_listener_demo`, `lifecycle_demo` |
 | `ros2_learning_cpp` | C++ (rclcpp) counterpart to `ros2_learning`, demonstrating the same patterns side by side with a rclpy ↔ rclcpp mapping guide. | `minimal_publisher`, `minimal_subscriber`, `minimal_service_server`, `minimal_service_client`, `minimal_action_server`, `minimal_action_client`, `custom_interface_demo` |
 | `sample_utils` | Shared PID, Gaussian noise and angle helpers | Library (no executables) |
@@ -235,6 +236,13 @@ ros2 launch nav2_learning occupancy_mapping_demo.launch.py
 ros2 launch openusd_bridge ground_robot_openusd.launch.py
 ```
 
+### Natural-Language Bridge (`rai_bridge`)
+
+```bash
+# Scripted natural-language commands drive the ground robot (RAI-style bridge)
+ros2 launch rai_bridge nl_teleop_demo.launch.py
+```
+
 ---
 
 ## Learning Tutorials
@@ -320,6 +328,7 @@ This project is licensed under the [MIT License](LICENSE).
 - [ros2_learning](src/ros2_learning/README.en.md)
 - [ros2_learning_cpp](src/ros2_learning_cpp/README.en.md)
 - [openusd_bridge](src/openusd_bridge/README.en.md)
+- [rai_bridge](src/rai_bridge/README.en.md)
 - [sample_utils](src/sample_utils/README.en.md)
 
 Run `bash scripts/test-integration.sh` after building the workspace for the four real-node scenarios.
