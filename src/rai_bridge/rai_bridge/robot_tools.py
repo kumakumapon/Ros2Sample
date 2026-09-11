@@ -1,4 +1,5 @@
-"""Pure "tool" functions that turn a command into Twist-shaped values.
+"""
+Pure "tool" functions that turn a command into Twist-shaped values.
 
 Each function here is deliberately small, typed, and documented -- the same
 shape RAI and LangChain agents expect a "tool" to have, so
@@ -59,7 +60,8 @@ def command_duration_sec(
     linear_speed: float,
     angular_speed: float,
 ) -> float:
-    """Return how long to hold the Twist to satisfy command.value.
+    """
+    Return how long to hold the Twist to satisfy command.value.
 
     Distance-based actions divide meters by linear_speed; rotation-based
     actions convert degrees to radians and divide by angular_speed. Unknown

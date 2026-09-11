@@ -31,7 +31,7 @@ setup(
     maintainer='ROS 2 Sample Maintainers',
     maintainer_email='dev@example.com',
     description=(
-        "Bridge free-form natural-language text commands to ROS 2 Twist commands, "
+        'Bridge free-form natural-language text commands to ROS 2 Twist commands, '
         "in the spirit of RobotecAI's RAI agent framework."
     ),
     license='MIT',

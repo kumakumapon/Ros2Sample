@@ -1,4 +1,5 @@
-"""Rule-based natural-language command parser (no ROS or LLM dependency).
+"""
+Rule-based natural-language command parser (no ROS or LLM dependency).
 
 This is the offline fallback that ``nl_command_node`` uses by default, and
 that CI exercises deterministically. It recognizes a small set of Japanese
@@ -44,7 +45,8 @@ def _extract_number(text: str, pattern: 're.Pattern') -> Optional[float]:
 
 
 def parse_command(text: str) -> ParsedCommand:
-    """Parse free-form text into a ParsedCommand.
+    """
+    Parse free-form text into a ParsedCommand.
 
     Recognized actions are ``move_forward``, ``move_backward``,
     ``rotate_left``, ``rotate_right`` and ``stop``. Text that matches none

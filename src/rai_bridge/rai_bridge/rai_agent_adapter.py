@@ -1,4 +1,5 @@
-"""Optional adapter wrapping robot_tools as LangChain tools for a real agent.
+"""
+Optional adapter wrapping robot_tools as LangChain tools for a real agent.
 
 ``rai_bridge`` works fully offline with ``nl_command_parser``'s rule-based
 parser -- that is what CI exercises, since it needs no network access or LLM
@@ -27,7 +28,8 @@ def is_langchain_available() -> bool:
 
 
 def build_rai_tools():
-    """Wrap robot_tools functions as LangChain Tool objects.
+    """
+    Wrap robot_tools functions as LangChain Tool objects.
 
     Raises RaiAgentUnavailableError when langchain_core is not installed, so
     callers can fall back to nl_command_parser.parse_command instead.
