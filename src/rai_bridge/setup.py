@@ -40,6 +40,7 @@ setup(
         'console_scripts': [
             'nl_command_node = rai_bridge.nl_command_node:main',
             'nl_demo_publisher = rai_bridge.nl_demo_publisher:main',
+            'rai_agent_node = rai_bridge.rai_agent_node:main',
         ],
     },
 )
