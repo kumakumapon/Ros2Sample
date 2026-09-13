@@ -50,7 +50,7 @@
 | `ros2_learning_cpp` | `ros2_learning` と同じ題材を rclcpp（C++）で書き比べる学習パッケージ。Publisher/Subscriber、Service、Action、カスタムインターフェースの最小構成サンプル | `minimal_publisher`, `minimal_subscriber`, `minimal_service_server`, `minimal_service_client`, `minimal_action_server`, `minimal_action_client`, `custom_interface_demo` |
 | `nav2_learning` | Navigation2 の概念を Nav2 を使わずに段階的に学ぶ学習パッケージ。OccupancyGrid マップ配信、A* 経路計画、Pure Pursuit 経路追従、Nav2 waypoint action クライアント、コストマップ監視、log-odds によるオンライン占有格子地図マッピング（SLAM入門）の軽量サンプル | `simple_map_publisher`, `simple_path_planner`, `simple_path_follower`, `nav2_waypoint_client`, `costmap_monitor`, `simple_occupancy_mapper` |
 | `openusd_bridge` | `Odometry` の位置・姿勢を OpenUSD stage の時系列 `Xform` として保存するオプション連携サンプル | `odom_to_usd` |
-| `rai_bridge` | 自然言語テキスト指令をルールベースで解析し `cmd_vel` へ変換する、[RobotecAI の RAI](https://github.com/RobotecAI/rai) 風の最小サンプル。`langchain-core` があれば同じツール関数を LangChain agent 用にラップする拡張ポイントも収録 | `nl_command_node`, `nl_demo_publisher` |
+| `rai_bridge` | 自然言語テキスト指令をルールベースで解析し `cmd_vel` へ変換する、[RobotecAI の RAI](https://github.com/RobotecAI/rai) 風の最小サンプル。`langchain-core` があれば同じツール関数を LangChain agent 用にラップする拡張ポイントも収録。TurtleBot3 を LangChain 経由の LLM（Anthropic/OpenAI/Ollama/OpenAI 互換）で操作する `rai_agent_node` も収録 | `nl_command_node`, `nl_demo_publisher`, `rai_agent_node` |
 | `sample_utils` | PID・ガウスノイズ・角度正規化の共通ライブラリ | ライブラリ（実行ファイルなし） |
 | `sample_interfaces` | カスタム msg / srv / action 定義（ROS 2 インターフェース定義の学習用） | _(ライブラリパッケージ：実行ファイルなし)_ |
 
