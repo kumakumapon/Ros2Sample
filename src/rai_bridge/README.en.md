@@ -43,8 +43,33 @@ ros2 topic echo /nl_command_status
 | --- | --- |
 | `nl_command_node` | Subscribe to `nl_command` (`std_msgs/String`) and publish `cmd_vel` and `nl_command_status`. |
 | `nl_demo_publisher` | Replay the scripted commands from `config/nl_command_demo.yaml` onto `nl_command`. |
+| `rai_agent_node` | LLM agent node for TurtleBot3. Subscribes to `rai_goal`, calls LangChain tools, and publishes `cmd_vel`. Falls back to rule-based parser when `use_llm: false`. |
 
 Individual nodes use `ros2 run rai_bridge <executable>`.
+
+## TurtleBot3 / RAI Agent
+
+`rai_agent_node` connects TurtleBot3 to an LLM agent.
+Set `use_llm: true` in `config/tb3_rai_agent.yaml`, configure your provider and API key, then launch:
+
+```bash
+colcon build --packages-select rai_bridge
+source install/setup.bash
+ros2 launch rai_bridge tb3_rai_agent.launch.py
+
+# In another terminal, send natural-language goals
+ros2 topic pub -1 /rai_goal std_msgs/msg/String "data: 'move forward 2 m'"
+ros2 topic echo /rai_status
+```
+
+Supported LLM providers (select via `llm_provider` in `config/tb3_rai_agent.yaml`):
+
+| `llm_provider` | Backend | Extra package |
+| --- | --- | --- |
+| `"anthropic"` | Claude (cloud) | `pip install langchain-anthropic` |
+| `"openai"` | GPT (cloud) | `pip install langchain-openai` |
+| `"ollama"` | Ollama local LLM | `pip install langchain-ollama` |
+| `"openai_compatible"` | LM Studio / vLLM / any OpenAI-compatible server | `pip install langchain-openai` |
 
 ## Interfaces and parameters
 
