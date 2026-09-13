@@ -71,6 +71,63 @@ Supported LLM providers (select via `llm_provider` in `config/tb3_rai_agent.yaml
 | `"ollama"` | Ollama local LLM | `pip install langchain-ollama` |
 | `"openai_compatible"` | LM Studio / vLLM / any OpenAI-compatible server | `pip install langchain-openai` |
 
+### How ROS 2 connects to LangChain (architecture)
+
+`rai_agent_node` uses LangChain's `bind_tools()` to expose ROS 2 actions as
+"tools" to the LLM. Instead of replying with free text, the LLM returns the
+tool name and arguments to call (`tool_calls`); the node converts that into
+a `Twist` and publishes it on `cmd_vel`.
+
+```
+/rai_goal (natural-language string)
+      │
+      ▼
+SystemMessage + HumanMessage (includes /odom, /scan summaries)
+      │
+      ▼
+llm.bind_tools(tools).invoke(messages)   ← LangChain calls the LLM API here
+      │
+      ▼
+response.tool_calls  e.g. [{"name": "move_forward", "args": {"distance_m": 2.0}}]
+      │
+      ▼
+_tool_call_to_command() → robot_tools.move_forward(), etc.
+      │
+      ▼
+phase queue → 20Hz Twist publish → /cmd_vel
+```
+
+The tool definitions live in `rai_agent_adapter.build_rai_tools()` (which
+wraps the `rai_bridge.robot_tools` functions as LangChain `Tool` objects).
+The single place to change how the LLM client is built is `_build_llm()` in
+`rai_agent_node.py`.
+
+When `use_llm: false`, this whole path is bypassed and the node relies only
+on the rule-based `nl_command_parser` (works without LangChain installed).
+
+### rai_agent_node topics and parameters
+
+| Topic | Type | Direction | Purpose |
+| --- | --- | --- | --- |
+| `rai_goal` | `std_msgs/String` | Subscribe | Natural-language goal text |
+| `odom` | `nav_msgs/Odometry` | Subscribe | Position summary for LLM context |
+| `scan` | `sensor_msgs/LaserScan` | Subscribe | Nearest-obstacle summary for LLM context |
+| `cmd_vel` | `geometry_msgs/Twist` | Publish | Velocity command (20Hz) |
+| `rai_status` | `std_msgs/String` | Publish | Execution result / error status |
+
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `linear_speed` | `0.22` | `linear.x` for forward/backward [m/s] (TB3 Burger max) |
+| `angular_speed` | `2.84` | `angular.z` for turning [rad/s] (TB3 Burger max) |
+| `publish_rate` | `20.0` | `cmd_vel` publish rate [Hz] |
+| `goal_topic` | `rai_goal` | Topic name to subscribe for goals |
+| `cmd_vel_topic` | `cmd_vel` | Topic name to publish velocity commands |
+| `use_llm` | `false` | `true` enables the LangChain LLM agent path |
+| `llm_provider` | `anthropic` | `anthropic` / `openai` / `ollama` / `openai_compatible` |
+| `llm_model` | `claude-haiku-4-5-20251001` | Model name to use |
+| `llm_api_key` | `""` | API key (prefer an environment variable) |
+| `llm_base_url` | `""` | Endpoint URL for local LLM servers |
+
 ## Interfaces and parameters
 
 `nl_command_node`: `input_topic` defaults to `nl_command`; `linear_speed=0.3` m/s,

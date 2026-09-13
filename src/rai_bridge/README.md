@@ -82,6 +82,62 @@ ros2 topic echo /rai_status
 | `"ollama"` | Ollama ローカル LLM | `pip install langchain-ollama` |
 | `"openai_compatible"` | LM Studio / vLLM など | `pip install langchain-openai` |
 
+### ROS 2 と LangChain の接続方式（アーキテクチャ）
+
+`rai_agent_node` は LangChain の `bind_tools()` を使い、ROS 2 の動作を
+「ツール」として LLM に渡します。LLM はテキストで応答するのではなく、
+呼び出すツール名と引数（`tool_calls`）を返し、ノード側がそれを `Twist` に
+変換して `cmd_vel` へ publish します。
+
+```
+/rai_goal (自然言語文字列)
+      │
+      ▼
+SystemMessage + HumanMessage（/odom, /scan の要約を含む）
+      │
+      ▼
+llm.bind_tools(tools).invoke(messages)   ← LangChain がここで LLM API を呼ぶ
+      │
+      ▼
+response.tool_calls  例: [{"name": "move_forward", "args": {"distance_m": 2.0}}]
+      │
+      ▼
+_tool_call_to_command() → robot_tools.move_forward() 等
+      │
+      ▼
+phase queue → 20Hz Twist publish → /cmd_vel
+```
+
+ツール定義本体は `rai_agent_adapter.build_rai_tools()`（`rai_bridge.robot_tools`
+の関数群を LangChain `Tool` としてラップしたもの）にあります。LLM 呼び出しの
+実装差し替え箇所は `rai_agent_node.py` の `_build_llm()` 一箇所に集約しています。
+
+`use_llm: false` の場合はこの経路をすべてバイパスし、`nl_command_parser` に
+よるルールベースパースのみで動作します（LangChain 未導入でも動作可能）。
+
+### rai_agent_node のトピックとパラメータ
+
+| トピック | 型 | 方向 | 説明 |
+| --- | --- | --- | --- |
+| `rai_goal` | `std_msgs/String` | 購読 | 自然言語のゴール文字列 |
+| `odom` | `nav_msgs/Odometry` | 購読 | LLM コンテキスト用の位置情報 |
+| `scan` | `sensor_msgs/LaserScan` | 購読 | LLM コンテキスト用の最短障害物距離 |
+| `cmd_vel` | `geometry_msgs/Twist` | Publish | 速度指令（20Hz） |
+| `rai_status` | `std_msgs/String` | Publish | 実行結果・エラーのステータス |
+
+| parameter | default | 説明 |
+| --- | --- | --- |
+| `linear_speed` | `0.22` | 前進・後退の `linear.x` [m/s]（TB3 Burger 最大値） |
+| `angular_speed` | `2.84` | 旋回の `angular.z` [rad/s]（TB3 Burger 最大値） |
+| `publish_rate` | `20.0` | `cmd_vel` の publish 周期 [Hz] |
+| `goal_topic` | `rai_goal` | 購読するゴールトピック名 |
+| `cmd_vel_topic` | `cmd_vel` | publish する速度トピック名 |
+| `use_llm` | `false` | `true` で LangChain LLM エージェント経路を使用 |
+| `llm_provider` | `anthropic` | `anthropic` / `openai` / `ollama` / `openai_compatible` |
+| `llm_model` | `claude-haiku-4-5-20251001` | 使用するモデル名 |
+| `llm_api_key` | `""` | API キー（環境変数での設定を推奨） |
+| `llm_base_url` | `""` | ローカル LLM のエンドポイント URL |
+
 ## parameter
 
 `nl_command_node`
