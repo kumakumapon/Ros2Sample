@@ -1,0 +1,56 @@
+rai_agent_node:
+  ros__parameters:
+
+    # ── Motion ──────────────────────────────────────────────────────────────
+    linear_speed: 0.22      # TurtleBot3 Burger 最大速度 [m/s]  (Waffle: 0.26)
+    angular_speed: 2.84     # TurtleBot3 Burger 最大角速度 [rad/s]
+    publish_rate: 20.0      # cmd_vel の publish レート [Hz]
+
+    # ── Topics ──────────────────────────────────────────────────────────────
+    # 自然言語ゴールを送るトピック (std_msgs/String)
+    goal_topic: rai_goal
+    # TurtleBot3 の速度指令トピック
+    cmd_vel_topic: cmd_vel
+
+    # ── LLM CONNECTION ──────────────────────────────────────────────────────
+    # [1] use_llm を true に変更して LLM エージェントを有効化する
+    use_llm: false
+
+    # [2] プロバイダーを選択する
+    #
+    #   クラウド LLM:
+    #     "anthropic"          — Claude (要 API キー)
+    #     "openai"             — GPT (要 API キー)
+    #
+    #   ローカル LLM:
+    #     "ollama"             — Ollama ネイティブ API
+    #                            pip install langchain-ollama
+    #                            ollama serve && ollama pull llama3.2
+    #     "openai_compatible"  — OpenAI 互換サーバー汎用
+    #                            pip install langchain-openai
+    #                            (Ollama / LM Studio / vLLM など)
+    #
+    llm_provider: anthropic
+
+    # [3] モデル名を設定する
+    #     anthropic:          "claude-haiku-4-5-20251001" / "claude-sonnet-4-6"
+    #     openai:             "gpt-4o-mini" / "gpt-4o"
+    #     ollama:             "llama3.2" / "qwen2.5" / "mistral" など
+    #                         ※ ツール呼び出し対応モデルであること
+    #     openai_compatible:  使用するサーバーのモデル名
+    llm_model: claude-haiku-4-5-20251001
+
+    # [4] ローカル LLM のエンドポイント URL（クラウドの場合は空欄でOK）
+    #     ollama:             http://localhost:11434       (デフォルト。省略可)
+    #     openai_compatible:  http://localhost:11434/v1   (Ollama OpenAI 互換)
+    #                         http://localhost:1234/v1    (LM Studio)
+    #                         http://localhost:8000/v1    (vLLM)
+    llm_base_url: ""
+
+    # [5] API キー
+    #     クラウド: 環境変数での設定を推奨（yaml への直書きはリポジトリに残る）
+    #               Anthropic: export ANTHROPIC_API_KEY=sk-ant-...
+    #               OpenAI:    export OPENAI_API_KEY=sk-...
+    #     ローカル: 空欄でOK（ollama は不要。openai_compatible は自動で "local" をセット）
+    llm_api_key: ""
+    # ────────────────────────────────────────────────────────────────────────

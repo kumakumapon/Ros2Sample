@@ -56,6 +56,31 @@ ros2 topic echo /nl_command_status
 | --- | --- |
 | `nl_command_node` | `nl_command`（`std_msgs/String`）を購読し、`cmd_vel` と `nl_command_status` を publish |
 | `nl_demo_publisher` | `config/nl_command_demo.yaml` のスクリプトを `nl_command` へ順に publish |
+| `rai_agent_node` | TurtleBot3 向け LLM エージェントノード。`rai_goal` を購読し、LangChain ツール呼び出し経由で `cmd_vel` へ Twist を publish。`use_llm: false` でルールベースフォールバック動作 |
+
+## TurtleBot3 / RAI エージェント
+
+`rai_agent_node` は TurtleBot3 と LLM を接続するエージェントノードです。
+`config/tb3_rai_agent.yaml` で `use_llm: true` に変更し、プロバイダーと API キーを設定して起動します。
+
+```bash
+colcon build --packages-select rai_bridge
+source install/setup.bash
+ros2 launch rai_bridge tb3_rai_agent.launch.py
+
+# 別ターミナルで自然言語ゴールを送る
+ros2 topic pub -1 /rai_goal std_msgs/msg/String "data: '2メートル進んで'"
+ros2 topic echo /rai_status
+```
+
+対応 LLM プロバイダー（`config/tb3_rai_agent.yaml` の `llm_provider` で選択）:
+
+| `llm_provider` | 用途 | 追加パッケージ |
+| --- | --- | --- |
+| `"anthropic"` | Claude（クラウド） | `pip install langchain-anthropic` |
+| `"openai"` | GPT（クラウド） | `pip install langchain-openai` |
+| `"ollama"` | Ollama ローカル LLM | `pip install langchain-ollama` |
+| `"openai_compatible"` | LM Studio / vLLM など | `pip install langchain-openai` |
 
 ## parameter
 
